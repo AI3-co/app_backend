@@ -5,21 +5,23 @@ import express from 'express'
 import OpenAI from 'openai'
 import cors from 'cors'
 import morgan from 'morgan'
-import userRoutes from './routes/user.route.js'
-import authRoutes from "./routes/auth.route.js"
-import assistantRoutes from "./routes/assistant.route.js"
-import organizationRoutes from "./routes/organization.route.js"
-import teamRoutes from "./routes/team.route.js"
+import userRoutes from '../routes/user.route.js'
+import authRoutes from "../routes/auth.route.js"
+import assistantRoutes from "../routes/assistant.route.js"
 
-export const openai = new OpenAI({
-    apiKey: process.env.OPEN_AI_KEY
-})
+// export const app = express()
+
+// const PORT = process.env.PORT || 4000
+
+// export const openai = new OpenAI({
+//     apiKey: process.env.OPEN_AI_KEY
+// })
 
 class Server {
     app = null;
     port = "null";
     versioning = ""
-    // openai = {}
+    openai = {}
 
     constructor() {
         this.app = express();
@@ -28,11 +30,17 @@ class Server {
         this.addMiddleware()
         this.addRoutes();
         this.connectToDb();
-        // this.instantiateOpenAI()
+        this.instantiateOpenAI()
     }
 
     versionThisRoute(route) {
         return this.versioning + route
+    }
+
+    instantiateOpenAI() {
+        this.openai = new OpenAI({
+            apiKey: process.env.OPENAI_API_KEY
+        })
     }
 
     addMiddleware() {
@@ -42,11 +50,9 @@ class Server {
     }
 
     addRoutes() {
-        this.app.use(this.versionThisRoute("/user"), userRoutes);
-        this.app.use(this.versionThisRoute("/assistant"), assistantRoutes);
-        this.app.use(this.versionThisRoute("/auth"), authRoutes);
-        this.app.use(this.versionThisRoute("/organization"), organizationRoutes);
-        this.app.use(this.versionThisRoute("/team"), teamRoutes);
+        this.app.use(this.versionThisRoute("/users"), userRoutes);
+        // this.app.use(this.versionThisRoute("/assistant"), assistantRoutes);
+        // this.app.use(this.versionThisRoute("/auth"), authRoutes);
     }
 
     async connectToDb() {
@@ -67,7 +73,5 @@ class Server {
         );
     }
 }
-
-new Server()
 
 export default Server

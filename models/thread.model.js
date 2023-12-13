@@ -1,4 +1,7 @@
 import { Schema, model } from 'mongoose'
+import Helper from '../helpers/helpers'
+
+const helper = new Helper()
 
 const ThreadSchema = new Schema({
     messages: {
@@ -10,5 +13,7 @@ const ThreadSchema = new Schema({
         required: true
     }
 }, { timestamps: true })
+
+ThreadSchema.set('toJSON', helper.formatModelResponse())
 
 export default model('Thread', ThreadSchema)
