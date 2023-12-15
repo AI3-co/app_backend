@@ -1,5 +1,7 @@
 import { Schema, model } from "mongoose";
-import helpers from "../helpers/helpers.js";
+import Helper from "../helpers/helpers.js";
+
+const helpers = new Helper()
 
 const UserSchema = new Schema({
     firstName: {
@@ -40,7 +42,7 @@ const UserSchema = new Schema({
 }, { timestamps: true })
 
 
-UserSchema.set('toJSON', helpers.formatModelResponse)
+UserSchema.set('toJSON', helpers.formatModelResponse())
 
 export default model('User', UserSchema)
 // name, email, organization, password, skills, profile image,

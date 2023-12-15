@@ -93,6 +93,23 @@ export async function getAllResources(model, resource) {
     }
 }
 
+/**
+ *
+ * @param {*} model
+ * @param {*} resource - Requires field & value
+ */
+export async function getResourceByField(model, resource) {
+    try {
+        const { field, value } = resource
+        console.log({ field, value })
+        let foundResource = await model.find({ email: "johndoe@gmail.com" })
+        console.log({ foundResource })
+        return { resource: foundResource[0], success: true }
+    } catch (error) {
+        return { msg: 'Error locating resource by field', error: error.message, success: false }
+    }
+}
+
 
 export async function getResourceById(model, resource) {
     try {
