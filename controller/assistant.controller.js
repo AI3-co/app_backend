@@ -1,6 +1,6 @@
 import Assistant from '../models/assistant.model.js'
 import { createResource } from '../repos/db.js';
-import { buildAssistant } from '../services/useOpenai.js';
+import { buildAssistant } from '../services/openAI.service.js';
 
 class AssistantController {
 
