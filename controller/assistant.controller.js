@@ -1,9 +1,8 @@
 import Assistant from '../models/assistant.model.js'
 import { createResource } from '../repos/db.js';
 import { buildAssistant } from '../services/useOpenai.js';
-import BaseController from './base.controller.js';
 
-class AssistantController extends BaseController {
+class AssistantController {
 
     async createAssistant(req, res, next) {
         const { body } = req
@@ -17,7 +16,7 @@ class AssistantController extends BaseController {
         const builtAssistant = await buildAssistant(buildConfig)
 
         if (builtAssistant.success) {
-            const nativeConfig = { ...buildConfig, openaiID: builtAssistant.createdAssistant.id }
+            const nativeConfig = { ...buildConfig, openaiID: builtAssistant?.createdAssistant?.id }
             const newAssistant = await createResource(Assistant, nativeConfig)
             if (newAssistant.success) {
                 res.status(201).json({ data: newAssistant.resource, message: "Assistant created" })
