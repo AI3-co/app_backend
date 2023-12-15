@@ -3,7 +3,7 @@ import Team from "../models/team.model.js"
 import Assistant from "../models/assistant.model.js"
 import { createResource, getAllResources, pushUpdatesToResource } from "../repos/db.js"
 import { DefaultFolderTemplates } from "../utils/template.js"
-import { buildAssistant } from "../services/useOpenai.js"
+import { buildAssistant } from "../services/openAI.service.js"
 
 class OrganizationController {
     /* JOIN AN ORGANIZATION */
