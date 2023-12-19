@@ -53,7 +53,7 @@ export default class AuthController extends BaseController {
             if (selectedOrganization.resource)
                 user.resource.selectedOrganization = selectedOrganization.resource
 
-            helper.sendServerSuccessResponse(res, 200, { user: user.resource })
+            helper.sendServerSuccessResponse(res, 200, user.resource)
         } catch (error) {
             helper.sendServerErrorResponse(res, 401, error, 'Error fetching user informations')
         }
