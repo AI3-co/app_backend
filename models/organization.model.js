@@ -6,7 +6,8 @@ const helper = new Helper()
 const OrganizationSchema = new Schema({
     name: {
         type: String,
-        required: true
+        required: true,
+        unique: true
     },
     members: {
         type: [Schema.Types.ObjectId],
@@ -15,6 +16,10 @@ const OrganizationSchema = new Schema({
     teams: {
         type: [Schema.Types.ObjectId],
         ref: "Team"
+    },
+    owner: {
+        type: Schema.Types.ObjectId,
+        ref: "User",
     }
 }, { timestamps: true })
 

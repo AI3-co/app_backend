@@ -1,9 +1,13 @@
 import Organization from "../models/organization.model.js"
 import Team from "../models/team.model.js"
 import Assistant from "../models/assistant.model.js"
-import { createResource, getAllResources, pushUpdatesToResource } from "../repos/db.js"
+import User from "../models/user.model.js"
+import { createResource, getAllResourceAndPopulateRefFields, getAllResources, getResourceById, getSingleResourceAndPopulateFields, pushUpdatesToResource, updateResource } from "../repos/db.js"
 import { DefaultFolderTemplates } from "../utils/template.js"
 import { buildAssistant } from "../services/openAI.service.js"
+import Helper from "../helpers/helpers.js"
+
+const helper = new Helper()
 
 class OrganizationController {
     /* JOIN AN ORGANIZATION */
@@ -26,14 +30,30 @@ class OrganizationController {
      */
     async createOrganization(req, res, next) {
         try {
+
+            const userToken = req.headers.authorization
+            const newOrganizationName = req.body.name
+
+            if (!userToken) {
+                throw new Error("Only a user can create orgnizations")
+            }
+
+            if (!req.user) {
+                throw new Error("Log in as a user to create an organization")
+            }
+
+            if (!newOrganizationName)
+                throw new Error("Your Organization needs a name ")
+
             const orgData = {
-                name: req.body.name
+                name: newOrganizationName,
+                members: [req?.user?.userId],
+                owner: req?.user?.userId  /// extracted id of user
             }
             const newOrganization = await createResource(Organization, orgData)
             const newOrgID = newOrganization.resource._id.toString()
 
-            //console.log("ORG", { newOrganization: newOrganization.resource, id: newOrganization.resource._id.toString() })
-            console.log({ orgData, newOrgID })
+            // console.log({ orgData, newOrgID })
 
             // create an assistant then a team based on default Folder Templates
             async function createOrganizationGroup() {
@@ -46,12 +66,11 @@ class OrganizationController {
                         let _team = {
                             name: template.name,
                             organization: newOrgID,
+                            createdBy: req?.user?.userId
                         }
 
                         const newTeam = await createResource(Team, _team)
                         _teams.push(newTeam.resource)
-                        // create assistant
-                        // name, openaiID, model, instructions, teams
 
                         const assistantConfig = {
                             instructions: template.instructions,
@@ -68,23 +87,26 @@ class OrganizationController {
                             teams: [newTeam.resource._id.toString()]
                         }
                         const newAssistant = await createResource(Assistant, _assistant)
-                        console.log({ newAssistant })
+                        await pushUpdatesToResource(Team, { id: newTeam.resource._id.toString() }, { fieldToUpdate: 'assistants', newData: [newAssistant.resource.id] })
+                        // use the first assistant as Team's default assistant
+                        await updateResource(Team, { id: newTeam.resource._id.toString() }, { defaultAssistant: newAssistant.resource.id })
                         _createdAssistants.push(newAssistant.resource)
                         _assistants.push(builtAssistant.createdAssistant)
                     })
                 )
                 const teamIDs = _teams.map(team => team.id.toString())
-                console.log('Team Ids', teamIDs)
-                pushUpdatesToResource(Organization, { id: newOrgID }, { fieldToUpdate: 'teams', newData: teamIDs })
-
+                await pushUpdatesToResource(Organization, { id: newOrgID }, { fieldToUpdate: 'teams', newData: teamIDs })
+                await pushUpdatesToResource(User, { id: req.user.userId }, { fieldToUpdate: 'organizations', newData: [newOrgID] })
+                await pushUpdatesToResource(User, { id: req.user.userId }, { fieldToUpdate: 'teams', newData: teamIDs })
                 return { _assistants, _createdAssistants, _teams, newOrganization: newOrganization.resource }
             }
 
             const createdGroup = newOrganization.success && await createOrganizationGroup()
             // console.log({ createdGroup })
             res.status(201).json({ message: "Organization created", createdGroup })
+
         } catch (error) {
-            res.status(401).json({ data: 'Could not create organization', error: error.message })
+            res.status(401).json({ message: 'Could not create organization', error: error.message })
         }
     }
 
@@ -92,13 +114,15 @@ class OrganizationController {
     /**
      * Get One Organization
      */
-    // async getSingleOrganization(req, res, next) {
-    //     try {
-
-    //     } catch (error) {
-
-    //     }
-    // }
+    async getSingleOrganization(req, res, next) {
+        try {
+            const organizationID = req.params.id
+            const foundOrganization = await getSingleResourceAndPopulateFields(Organization, { id: organizationID }, ['members', 'owner', 'teams'])
+            helper.sendServerResponse(res, 200, { message: 'Found an organization', data: foundOrganization })
+        } catch (error) {
+            helper.sendServerResponse(res, 401, { message: 'Could not find this organization', error: error.message })
+        }
+    }
 
     /* EDIT AN ORGANIZATION */
     /*
@@ -111,12 +135,13 @@ class OrganizationController {
     */
     async getAllOrganizations(req, res, next) {
         try {
-            //
-            // console.log("ORG", { newOrganization, id: newOrganization.resource.data })
             // DefaultFolderTemplates
-            const organizations = await getAllResources(Organization)
+            const populatedOrganizations = await getAllResourceAndPopulateRefFields(Organization, ['members', 'owner', 'teams'])
 
-            res.status(200).json({ message: 'Fetched all organizations', data: organizations })
+            if (!populatedOrganizations.success) throw new Error(populatedOrganizations.error)
+
+            console.log({ user: req.user })
+            res.status(200).json({ message: 'Fetched all organizations', data: populatedOrganizations })
         } catch (error) {
             res.status(401).json({ message: 'Could not create organization', error: error.message })
         }

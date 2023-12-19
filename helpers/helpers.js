@@ -9,6 +9,17 @@ class Helper {
     }
   }
 
+  sendServerSuccessResponse(responseObject, statusCode, payload, message) {
+    responseObject.status(statusCode).json({ data: payload, message })
+  }
+
+  sendServerErrorResponse(responseObject, statusCode, error, message) {
+    responseObject.status(statusCode).json({ error: error.message, message })
+  }
+
+  sendServerResponse(responseObject, statusCode, payload) {
+    responseObject.status(statusCode).json(payload)
+  }
 
 }
 

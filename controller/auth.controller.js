@@ -1,3 +1,4 @@
+import { signToken, verifyToken } from '../middlewares/jwt.js'
 import User from '../models/user.model.js'
 import { createResource, getResourceByField } from '../repos/db.js'
 import BaseController from './base.controller.js'
@@ -15,14 +16,16 @@ export default class AuthController extends BaseController {
         */
         try {
             const user = await getResourceByField(User, { field: 'email', value: req.body.email })
-
             // check password
             if (!user.resource) {
                 throw new Error('User not found')
             } else if (user.resource.password !== req.body.password) {
                 throw new Error("Email or Password incorrect")
             }
-            res.status(200).json({ message: 'Logged in successfully', data: user })
+
+            const userToken = signToken({ email: user.resource.email, role: user.resource.role, userId: user.resource.id })
+
+            res.status(200).json({ message: 'Logged in successfully', data: { token: userToken } })
         } catch (error) {
             res.status(401).json({ message: 'Could not log user in', error: error.message })
         }
@@ -43,7 +46,10 @@ export default class AuthController extends BaseController {
             if (newUser.error) {
                 throw new Error(newUser.error);
             }
-            res.status(201).json({ message: 'New user created successfully', data: newUser.resource })
+
+            const userToken = signToken({ email: newUser.resource.email, role: newUser.resource.role, newUserId: newUser.resource.id })
+
+            res.status(201).json({ message: 'New user created successfully', data: { token: userToken } })
         } catch (error) {
             res.status(401).json({ message: 'Could not create new user', error: error.message })
         }
@@ -55,6 +61,11 @@ export default class AuthController extends BaseController {
             2. Check if email exists
             3. Then store the user's info to db
         */
+        // const newToken = signToken({ user: 'chinedu@gmail.com', role: "user", userId: '018501810SNFE' })
+
+        // console.log({ newToken })
+        // const payload = verifyToken(newToken)
+        // res.json({ newToken, payload })
     }
 
     async confirmPasswordChange(req, res, next) {

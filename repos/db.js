@@ -25,8 +25,9 @@ export async function updateResource(model, resource, data) {
 
         if (!resourceID) return { msg: 'No Resource ID supplied', success: false }
 
-        console.log('UpdateResource()', { resource, data })
         let currentModel = await model.findByIdAndUpdate(resourceID, data, { new: true })
+        console.log('UpdateResource()', { resource, data, currentModel })
+
         return { resource: currentModel, success: true }
     } catch (error) {
         return { msg: 'Error updating resource', error: error.message, success: false }
@@ -46,7 +47,7 @@ export async function pushUpdatesToResource(model, resource, data = { fieldToUpd
         const { fieldToUpdate, newData } = data
         if (!foundResource) return { success: false, error: 'Could not find resource' }
 
-        console.log({ resource, data })
+        console.log({ resource, newData })
 
         newData.forEach(_data => {
             foundResource[fieldToUpdate].push(_data)
@@ -86,10 +87,43 @@ export async function deleteResource(req, res, next, resource) {
 
 export async function getAllResources(model, resource) {
     try {
-        let foundResource = await model.find().populate('teams')
+        let foundResource = await model.find()
+        console.log({ getALL: foundResource })
         return { resource: foundResource, success: true }
     } catch (error) {
         return { msg: 'Error updating resource', error: error.message, success: false }
+    }
+}
+
+export async function getSingleResourceAndPopulateFields(model, resource, fields = []) {
+    try {
+        let query = model.findById(resource.id)
+
+        fields.forEach(field => {
+            query = query.populate(field)
+        })
+
+        const populatedResources = await query.exec()
+        console.log({ populatedResources })
+        return { resource: populatedResources, success: true }
+    } catch (error) {
+        return { msg: 'Error finding and populating resource', error: error.message, success: false }
+    }
+}
+
+export async function getAllResourceAndPopulateRefFields(model, fields = []) {
+    try {
+        let query = model.find()
+
+        fields.forEach(field => {
+            query = query.populate(field)
+        })
+
+        const populatedResources = await query.exec()
+        console.log({ populatedResources })
+        return { resource: populatedResources, success: true }
+    } catch (error) {
+        return { msg: 'Error finding and populating resource', error: error.message, success: false }
     }
 }
 
@@ -101,19 +135,18 @@ export async function getAllResources(model, resource) {
 export async function getResourceByField(model, resource) {
     try {
         const { field, value } = resource
-        console.log({ field, value })
-        let foundResource = await model.find({ email: "johndoe@gmail.com" })
-        console.log({ foundResource })
-        return { resource: foundResource[0], success: true }
+        let foundResource = await model.findOne({ [field]: value })
+        return { resource: foundResource, success: true }
     } catch (error) {
         return { msg: 'Error locating resource by field', error: error.message, success: false }
     }
 }
 
 
+
+
 export async function getResourceById(model, resource) {
     try {
-        console.log({ resource })
         if (!resource.id)
             return { msg: 'Error, no resource ID supplied', error: error.message, success: false }
         let foundResource = await model.findById(resource.id)
