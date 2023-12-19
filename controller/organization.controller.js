@@ -98,6 +98,7 @@ class OrganizationController {
                 await pushUpdatesToResource(Organization, { id: newOrgID }, { fieldToUpdate: 'teams', newData: teamIDs })
                 await pushUpdatesToResource(User, { id: req.user.userId }, { fieldToUpdate: 'organizations', newData: [newOrgID] })
                 await pushUpdatesToResource(User, { id: req.user.userId }, { fieldToUpdate: 'teams', newData: teamIDs })
+                await updateResource(User, { id: req.user.userId }, { selectedOrganization: newOrgID }) // makes the newly created organization the selected organization
                 return { _assistants, _createdAssistants, _teams, newOrganization: newOrganization.resource }
             }
 
@@ -121,6 +122,25 @@ class OrganizationController {
             helper.sendServerResponse(res, 200, { message: 'Found an organization', data: foundOrganization })
         } catch (error) {
             helper.sendServerResponse(res, 401, { message: 'Could not find this organization', error: error.message })
+        }
+    }
+
+    /**
+     *
+     */
+    async userSelectOrganization(req, res, next) {
+        try {
+            const organizationID = req.params.id
+            const userID = req.user.userId
+
+            if (!organizationID) throw Error("Sorry, could not switch organizations")
+
+            const foundOrganization = await updateResource(User, { id: userID }, { selectedOrganization: organizationID })
+
+            if (!foundOrganization.success) throw Error('Could not switch organization')
+            helper.sendServerSuccessResponse(res, 200, foundOrganization.resource, 'Switched organization')
+        } catch (error) {
+            helper.sendServerErrorResponse(res, 401, error, 'Error selecting an organization')
         }
     }
 

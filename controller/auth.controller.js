@@ -1,7 +1,9 @@
 import Helper from '../helpers/helpers.js'
-import { signToken, verifyToken } from '../middlewares/jwt.js'
+import { signToken } from '../middlewares/jwt.js'
+import Team from "../models/team.model.js"
 import User from '../models/user.model.js'
-import { createResource, getResourceByField, getSingleResourceAndPopulateFields } from '../repos/db.js'
+import Organization from "../models/organization.model.js"
+import { createResource, getResourceByField, getResourceById, getSingleResourceAndPopulateFields } from '../repos/db.js'
 import BaseController from './base.controller.js'
 
 const helper = new Helper()
@@ -41,11 +43,17 @@ export default class AuthController extends BaseController {
 
             const user = await getSingleResourceAndPopulateFields(User, { id: userID }, ['organizations'])
 
-            console.log({ user })
-
             if (!user.success) throw Error('Error populating user ' + user.error)
 
-            helper.sendServerSuccessResponse(res, 200, user.resource)
+            // populate user teams
+            const selectedOrganization = await getResourceById(Organization, { id: user.resource.selectedOrganization })
+            if (!selectedOrganization.success) throw Error('Could not find selected organization')
+            await selectedOrganization.resource.populate('teams')
+
+            if (selectedOrganization.resource)
+                user.resource.selectedOrganization = selectedOrganization.resource
+
+            helper.sendServerSuccessResponse(res, 200, { user: user.resource })
         } catch (error) {
             helper.sendServerErrorResponse(res, 401, error, 'Error fetching user informations')
         }
