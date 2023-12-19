@@ -10,6 +10,8 @@ import authRoutes from "./routes/auth.route.js"
 import assistantRoutes from "./routes/assistant.route.js"
 import organizationRoutes from "./routes/organization.route.js"
 import teamRoutes from "./routes/team.route.js"
+import threadRoutes from "./routes/thread.route.js"
+import messageRoutes from "./routes/message.route.js"
 
 export const openai = new OpenAI({
     apiKey: process.env.OPEN_AI_KEY
@@ -47,6 +49,8 @@ class Server {
         this.app.use(this.versionThisRoute("/auth"), authRoutes);
         this.app.use(this.versionThisRoute("/organization"), organizationRoutes);
         this.app.use(this.versionThisRoute("/team"), teamRoutes);
+        this.app.use(this.versionThisRoute("/thread"), threadRoutes);
+        this.app.use(this.versionThisRoute("/message"), messageRoutes);
     }
 
     async connectToDb() {

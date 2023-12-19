@@ -16,6 +16,10 @@ const UserSchema = new Schema({
         type: Boolean,
         default: false,
     },
+    role: {
+        type: String,
+        default: 'user'
+    },
     profilePicture: {
         type: String
     },
@@ -33,9 +37,9 @@ const UserSchema = new Schema({
     },
     teams: {
         type: [Schema.Types.ObjectId],
-        ref: 'Teams'
+        ref: "Team"
     },
-    organzations: {
+    organizations: {
         type: [Schema.Types.ObjectId],
         ref: 'Organization'
     }

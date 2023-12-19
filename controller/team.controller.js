@@ -1,6 +1,9 @@
 
+import Helper from '../helpers/helpers.js';
 import Team from '../models/team.model.js'
-import { getResourceById } from '../repos/db.js'
+import { getAllResources, getResourceById, getSingleResourceAndPopulateFields } from '../repos/db.js'
+
+const helper = new Helper()
 
 class TeamController {
     constructor() {
@@ -15,7 +18,6 @@ class TeamController {
     async createTeam(req, res) {
         // create one assistant for a team
         // create team
-
     }
 
     async deleteTeam() { }
@@ -26,7 +28,11 @@ class TeamController {
         try {
             let foundTeam;
             if (req.params.id)
+                // foundTeam = await getSingleResourceAndPopulateFields(Team, { id: req.params.id }, ['defaultAssistant', 'members', 'organization'])
                 foundTeam = await getResourceById(Team, { id: req.params.id })
+
+            if (!foundTeam.resource) throw Error('No such team found')
+
             res.status(200).json({ data: foundTeam })
         } catch (error) {
             res.status(400).json({ error: error.message, message: 'Error fetching single team' })
@@ -34,7 +40,12 @@ class TeamController {
     }
 
     async getAllTeams(req, res) {
-        res.send("Got all teams")
+        try {
+            const foundTeams = await getAllResources(Team)
+            helper.sendServerSuccessResponse(res, 200, foundTeams.resource)
+        } catch (error) {
+            helper.sendServerErrorResponse(res, 401, error, 'Error fetching all teams')
+        }
     }
 }
 

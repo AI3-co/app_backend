@@ -22,3 +22,75 @@ export async function buildAssistant(config) {
 
     return { createdAssistant, config, success: true }
 }
+
+export async function createOAIThread() {
+    try {
+        const emptyThread = await openai.beta.threads.create()
+        console.log('formedThread=>()', { data: emptyThread, success: true })
+        return { data: emptyThread, success: true }
+    } catch (error) {
+        return {
+            error: 'Error creating thread',
+            success: false,
+            message: error.message
+        }
+    }
+}
+
+export async function createThreadMessage(threadID, message) {
+    try {
+        const threadMessages = await openai.beta.threads.messages.create(threadID, { role: 'user', content: message })
+        console.log('newMessage=>()', { data: threadMessages, success: true })
+        return { resource: threadMessages, success: true }
+    } catch (error) {
+        return {
+            error: 'Error creating thread message',
+            success: false,
+            message: error.message
+        }
+    }
+}
+
+// export async function retrieveRun(threadID, runID) {
+//     try {
+//         const retrievedRun = await openai.beta.threads.runs.retrieve(threadID, runID)
+//         console.log('runAssistantOnThread=>()', { data: retrievedRun, success: true })
+//         return { resource: retrievedRun, success: true }
+//     } catch (error) {
+//         return {
+//             error: 'Error fetching run on thread',
+//             success: false,
+//             message: error.message
+//         }
+//     }
+// }
+
+export async function runAssistantOnThread(threadID, assistantID) {
+    try {
+        console.log({ threadID, assistantID })
+        const aiResponse = await openai.beta.threads.runs.create(threadID, { assistant_id: assistantID })
+        console.log('runAssistantOnThread=>()', { data: aiResponse, success: true })
+        const threadMessages = await fetchThreadMessages(threadID)
+        return { resource: { runResponse: aiResponse, messages: threadMessages.resource }, success: true }
+    } catch (error) {
+        return {
+            error: 'Error running assistant on thread',
+            success: false,
+            message: error.message
+        }
+    }
+}
+
+export async function fetchThreadMessages(threadID) {
+    try {
+        const threadMessages = await openai.beta.threads.messages.list(threadID)
+        console.log('fetchThreadMessages=>()', { data: threadMessages.data.map(msg => { msg.content }), success: true })
+        return { resource: threadMessages.data, success: true }
+    } catch (error) {
+        return {
+            error: 'Error fetching thread messages',
+            success: false,
+            message: error.message
+        }
+    }
+}

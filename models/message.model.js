@@ -5,9 +5,14 @@ const MessageSchema = new Schema({
         type: String,
         required: true
     },
-    sender: {
+    createdBy: {
         type: Schema.Types.ObjectId,
-        ref: 'User'
+        ref: 'User',
+        required: true
+    },
+    oaiMessageID: {
+        type: String,
+        required: true
     }
 }, { timestamps: true })
 

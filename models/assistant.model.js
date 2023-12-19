@@ -8,6 +8,10 @@ const AssistantSchema = new Schema({
         type: String,
         required: true
     },
+    role: {
+        type: String,
+        default: 'assistant'
+    },
     alias: {
         type: String,
         required: true
