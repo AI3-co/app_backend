@@ -7,6 +7,7 @@ const organizationController = new OrganizationController()
 const router = Router()
 
 router
+    .patch("/select/:id", verifyUserAction, organizationController.userSelectOrganization)
     .get("/", verifyUserAction, organizationController.getAllOrganizations)
     .post("/", verifyUserAction, organizationController.createOrganization)
     .get("/:id", verifyUserAction, organizationController.getSingleOrganization)

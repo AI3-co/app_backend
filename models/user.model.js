@@ -39,6 +39,10 @@ const UserSchema = new Schema({
         type: [Schema.Types.ObjectId],
         ref: "Team"
     },
+    selectedOrganization: {
+        type: Schema.Types.ObjectId,
+        ref: "Organization"
+    },
     organizations: {
         type: [Schema.Types.ObjectId],
         ref: 'Organization'
