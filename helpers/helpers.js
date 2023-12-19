@@ -5,6 +5,7 @@ class Helper {
         returnedDoc.id = returnedDoc?._id.toString()
         delete returnedDoc._id
         delete returnedDoc.__v
+        delete returnedDoc.password
       }
     }
   }
