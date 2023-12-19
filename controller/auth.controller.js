@@ -1,7 +1,10 @@
+import Helper from '../helpers/helpers.js'
 import { signToken, verifyToken } from '../middlewares/jwt.js'
 import User from '../models/user.model.js'
-import { createResource, getResourceByField } from '../repos/db.js'
+import { createResource, getResourceByField, getSingleResourceAndPopulateFields } from '../repos/db.js'
 import BaseController from './base.controller.js'
+
+const helper = new Helper()
 
 export default class AuthController extends BaseController {
     constructor(model) {
@@ -24,10 +27,27 @@ export default class AuthController extends BaseController {
             }
 
             const userToken = signToken({ email: user.resource.email, role: user.resource.role, userId: user.resource.id })
-
             res.status(200).json({ message: 'Logged in successfully', data: { token: userToken } })
         } catch (error) {
             res.status(401).json({ message: 'Could not log user in', error: error.message })
+        }
+    }
+
+    async getUserInfo(req, res, next) {
+        try {
+            const userID = req.user.userId
+
+            if (!userID) throw Error('You need to login')
+
+            const user = await getSingleResourceAndPopulateFields(User, { id: userID }, ['organizations'])
+
+            console.log({ user })
+
+            if (!user.success) throw Error('Error populating user ' + user.error)
+
+            helper.sendServerSuccessResponse(res, 200, user.resource)
+        } catch (error) {
+            helper.sendServerErrorResponse(res, 401, error, 'Error fetching user informations')
         }
     }
 

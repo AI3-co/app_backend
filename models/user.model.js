@@ -34,6 +34,7 @@ const UserSchema = new Schema({
         type: String,
         required: true,
         trim: true,
+        select: false
     },
     teams: {
         type: [Schema.Types.ObjectId],
