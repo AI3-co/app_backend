@@ -5,7 +5,9 @@ const router = Router()
 const tC = new TeamController()
 
 router
-    .get("/", tC.getAllTeams)
     .get("/:id", tC.getSingleTeam)
+    .get("/:id/threads", tC.getTeamThreads)
+    .get("/", tC.getAllTeams)
+    .post("/", tC.createTeam)
 
 export default router
