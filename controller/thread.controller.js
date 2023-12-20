@@ -140,7 +140,6 @@ class ThreadController {
             const threads = await getResourceById(Thread, { id: threadID })
             const oaiThreadID = threads.resource.oaiThreadID
             allMessages = await fetchThreadMessages(oaiThreadID)
-            // extract last assistant message
             const lastMessage = allMessages.resource[0]
             const ai3LastMessage = threads.resource.messages[threads.resource.messages.length - 1]
             // console.log({ threads: threads.resource.messages[threads.resource.messages.length - 1] })
@@ -155,16 +154,40 @@ class ThreadController {
                 )
             }
 
+            console.log({ updateThreadWithLastMessage })
+
             if (!updateThreadWithLastMessage.success) throw new Error('Could not update thread with last message: ' + updateThreadWithLastMessage.error)
 
             if (!allMessages.resource[0].content[0].text.value)
                 allMessages = await fetchThreadMessages(oaiThreadID)
-
-            console.log({ THREADS: threads.resource })
-            console.log({ lastMessage })
             helper.sendServerSuccessResponse(res, 200, { allMessages: allMessages.resource, lastMessage })
         } catch (error) {
             helper.sendServerErrorResponse(res, 401, error, 'Error getting all thread messages')
+        }
+    }
+
+    async loadThreadMessages(req, res, next) {
+        try {
+            const threadID = req.params.id
+            if (!threadID) throw Error('You need a thread')
+            const threadMessages = await getResourceById(Thread, { id: threadID })
+
+            if (!threadMessages.success) throw Error('Could not load thread messages')
+
+            const allMessages = threadMessages.resource.messages.map(message => {
+                if (message.role) {
+                    return {
+                        ...message,
+                        id: message.id,
+                        created_at: message.created_at,
+                        content: message.content[0].text.value,
+                    }
+                }
+                return { role: "user", ...message }
+            })
+            helper.sendServerSuccessResponse(res, 200, allMessages, 'Fetched all threads')
+        } catch (error) {
+            helper.sendServerErrorResponse(res, 401, error, 'Error loading thread messages')
         }
     }
 
@@ -184,23 +207,23 @@ class ThreadController {
      * E.g. Based on assistant, there are several layers of nesting
      * Arrange the chats based on when created or just reverse the array
      */
-    async loadThreadMessages(req, res, next) {
-        try {
-            const threadID = req.params.id
+    // async loadThreadMessages(req, res, next) {
+    //     try {
+    //         const threadID = req.params.id
 
-            if (!threadID) throw Error('A thread is required')
+    //         if (!threadID) throw Error('A thread is required')
 
-            const threadMessages = await getResourceById(Thread, { id: threadID })
+    //         const threadMessages = await getResourceById(Thread, { id: threadID })
 
-            if (!threadMessages.success) throw Error('Could not find thread')
+    //         if (!threadMessages.success) throw Error('Could not find thread')
 
-            console.log({ threadMessages })
+    //         console.log({ threadMessages })
 
-            helper.sendServerSuccessResponse(res, 200, threadMessages.resource)
-        } catch (error) {
-            helper.sendServerErrorResponse(res, 401, error, 'Error loading thread messages')
-        }
-    }
+    //         helper.sendServerSuccessResponse(res, 200, threadMessages.resource)
+    //     } catch (error) {
+    //         helper.sendServerErrorResponse(res, 401, error, 'Error loading thread messages')
+    //     }
+    // }
 
     async deleteThread() { }
 

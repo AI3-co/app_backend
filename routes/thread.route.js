@@ -6,11 +6,12 @@ const router = Router()
 const threadController = new ThreadController()
 
 router
-    .get("/", verifyUserAction, threadController.getAllThreads)
     .patch("/:id", verifyUserAction, threadController.updateThreadWithMessage)
-    .get("/messages/:id", verifyUserAction, threadController.getAllMessagesWithinThread)
-    .post("/", verifyUserAction, threadController.createThread)
+    .get("/messages/update/:id", verifyUserAction, threadController.getAllMessagesWithinThread)
+    .get("/messages/load/:id", verifyUserAction, threadController.loadThreadMessages)
     .get("/:id", verifyUserAction, threadController.getSingleThread)
     .delete("/:id", verifyUserAction, threadController.deleteThread)
+    .post("/", verifyUserAction, threadController.createThread)
+    .get("/", verifyUserAction, threadController.getAllThreads)
 
 export default router
