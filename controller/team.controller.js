@@ -39,6 +39,19 @@ class TeamController {
         }
     }
 
+    async getTeamThreads(req, res, next) {
+        try {
+            const teamID = req.params.id
+            if (!teamID) throw Error('Team is required')
+            const foundTeamThreads = await getSingleResourceAndPopulateFields(Team, { id: teamID }, ['defaultAssistant'])
+            if (!foundTeamThreads.success) throw Error('Could not find team thread')
+            console.log({ foundTeamThreads })
+            helper.sendServerSuccessResponse(res, 200, foundTeamThreads.resource, 'Fetched team threads')
+        } catch (error) {
+            helper.sendServerErrorResponse(res, 401, error, 'Error loading team thread')
+        }
+    }
+
     async getAllTeams(req, res) {
         try {
             const foundTeams = await getAllResources(Team)

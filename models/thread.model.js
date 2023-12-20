@@ -9,6 +9,10 @@ const ThreadSchema = new Schema({
         ref: "User",
         required: true
     },
+    title: {
+        type: String,
+        default: 'Untitled', // use ai to automate title generation
+    },
     messages: { // !TODO - Revert back to using a ref and ObjectID type
         type: [],
     },
