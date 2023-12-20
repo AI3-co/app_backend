@@ -84,7 +84,7 @@ export async function runAssistantOnThread(threadID, assistantID) {
 export async function fetchThreadMessages(threadID) {
     try {
         const threadMessages = await openai.beta.threads.messages.list(threadID)
-        console.log('fetchThreadMessages=>()', { data: threadMessages.data.map(msg => { msg.content }), success: true })
+        console.log('fetchThreadMessages=>()', { data: threadMessages.data.length })
         return { resource: threadMessages.data, success: true }
     } catch (error) {
         return {
