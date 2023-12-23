@@ -23,6 +23,7 @@ const ThreadSchema = new Schema({
     team: {
         type: Schema.Types.ObjectId,
         ref: "Team",
+        required: true
     }
 }, { timestamps: true })
 

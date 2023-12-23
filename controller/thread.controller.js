@@ -20,16 +20,16 @@ class ThreadController {
             const teamID = req.body.teamID
             if (!user) throw new Error('You need to login to create threads')
 
+            if (!teamID) throw new Error('Threads can only be created under teams')
             const oaiNewThread = await createOAIThread()
             console.log({ oaiNewThreadee: oaiNewThread })
 
-            if (!teamID) throw new Error('Threads can only be created under teams')
-
-            if (!oaiNewThread.success) throw new Error('Could not create *oai thread: ' + oaiNewThread.error)
+            if (!oaiNewThread.success) throw new Error('Could not create thread via 3rd party: ' + oaiNewThread.error)
 
             const threadPayload = {
                 createdBy: user.userId,
-                oaiThreadID: oaiNewThread.data.id // newly created openai thread
+                oaiThreadID: oaiNewThread.data.id, // newly created openai thread
+                team: teamID,
             }
 
             console.log({ threadPayload })
@@ -45,6 +45,7 @@ class ThreadController {
             }
 
             await pushUpdatesToResource(Team, { id: teamID }, teamUpdatePayload)
+            await updateResource(Team, { id: teamID }, { lastVisitedThread: newThread.resource.id })
             await updateResource(Thread, { id: newThread.resource.id }, { team: teamID })
 
             helper.sendServerSuccessResponse(res, 201, newThread.resource)
