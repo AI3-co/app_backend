@@ -88,7 +88,6 @@ export async function deleteResource(req, res, next, resource) {
 export async function getAllResources(model, resource) {
     try {
         let foundResource = await model.find()
-        console.log({ getALL: foundResource })
         return { resource: foundResource, success: true }
     } catch (error) {
         return { msg: 'Error updating resource', error: error.message, success: false }
@@ -104,7 +103,6 @@ export async function getSingleResourceAndPopulateFields(model, resource, fields
         })
 
         const populatedResources = await query.exec()
-        console.log({ populatedResources })
         return { resource: populatedResources, success: true }
     } catch (error) {
         return { msg: 'Error finding and populating resource', error: error.message, success: false }
@@ -120,7 +118,6 @@ export async function getAllResourceAndPopulateRefFields(model, fields = []) {
         })
 
         const populatedResources = await query.exec()
-        console.log({ populatedResources })
         return { resource: populatedResources, success: true }
     } catch (error) {
         return { msg: 'Error finding and populating resource', error: error.message, success: false }
@@ -132,6 +129,18 @@ export async function getAllResourceAndPopulateRefFields(model, fields = []) {
  * @param {*} model
  * @param {*} resource - Requires field & value
  */
+
+export async function getManyResourcesByField(model, resource) {
+    try {
+        const { field, value } = resource
+        // consoel.log({ field, value })
+        let foundResource = await model.find({ [field]: value }).populate(field)
+        return { resource: foundResource, success: true }
+    } catch (error) {
+        throw Error('Error getting many resources')
+    }
+}
+
 export async function getResourceByField(model, resource) {
     try {
         const { field, value } = resource

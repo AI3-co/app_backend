@@ -12,6 +12,14 @@ const TeamSchema = new Schema({
         type: String,
         require: true
     },
+    files: {
+        type: [Schema.Types.ObjectId],
+        ref: "File"
+    },
+    promptFolder: {
+        type: [Schema.Types.ObjectId],
+        ref: "PromptFolder"
+    },
     organization: {
         type: Schema.Types.ObjectId,
         required: true,
@@ -22,8 +30,8 @@ const TeamSchema = new Schema({
         ref: "User"
     },
     threads: {
-        type: [Schema.Types.Object],
-        ref: "Thread"
+        type: [Schema.Types.ObjectId],
+        ref: 'Thread'
     },
     assistants: {
         type: [Schema.Types.ObjectId],
@@ -32,6 +40,10 @@ const TeamSchema = new Schema({
     defaultAssistant: {
         type: Schema.Types.ObjectId,
         ref: "Assistant"
+    },
+    lastVisitedThread: {
+        type: Schema.Types.ObjectId,
+        ref: "Thread"
     }
 }, { timestamps: true })
 

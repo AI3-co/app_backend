@@ -1,6 +1,7 @@
 
 import Helper from '../helpers/helpers.js';
 import Team from '../models/team.model.js'
+import Organization from "../models/organization.model.js"
 import { getAllResources, getResourceById, getSingleResourceAndPopulateFields } from '../repos/db.js'
 
 const helper = new Helper()
@@ -28,8 +29,8 @@ class TeamController {
         try {
             let foundTeam;
             if (req.params.id)
-                // foundTeam = await getSingleResourceAndPopulateFields(Team, { id: req.params.id }, ['defaultAssistant', 'members', 'organization'])
-                foundTeam = await getResourceById(Team, { id: req.params.id })
+                foundTeam = await getSingleResourceAndPopulateFields(Team, { id: req.params.id }, ['defaultAssistant', 'members', 'organization', 'assistants', 'threads'])
+            // foundTeam = await getResourceById(Team, { id: req.params.id })
 
             if (!foundTeam.resource) throw Error('No such team found')
 
