@@ -8,7 +8,7 @@ const threadController = new ThreadController()
 router
     .patch("/:id", verifyUserAction, threadController.updateThreadWithMessage)
     .get("/messages/update/:id", verifyUserAction, threadController.getAllMessagesWithinThread)
-    .get("/messages/load/:id", verifyUserAction, threadController.loadThreadMessages)
+    .get("/messages/load/:thread-:team", verifyUserAction, threadController.loadThreadMessages)
     .get("/:id", verifyUserAction, threadController.getSingleThread)
     .delete("/:id", verifyUserAction, threadController.deleteThread)
     .post("/", verifyUserAction, threadController.createThread)

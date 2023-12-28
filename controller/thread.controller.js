@@ -169,10 +169,14 @@ class ThreadController {
 
     async loadThreadMessages(req, res, next) {
         try {
-            const threadID = req.params.id
+            const threadID = req.params.thread
+            const teamID = req.params.team
             if (!threadID) throw Error('You need a thread')
-            const threadMessages = await getResourceById(Thread, { id: threadID })
+            const threadMessages = await getSingleResourceAndPopulateFields(Thread, { id: threadID }, ['createdBy'])
+            const foundTeam = await getSingleResourceAndPopulateFields(Team, { id: teamID }, ['defaultAssistant'])
+            // const threadMessages = await getResourceById(Thread, { id: threadID })
 
+            if (!foundTeam.resource) throw Error('Could not find team')
             if (!threadMessages.success) throw Error('Could not load thread messages')
 
             const allMessages = threadMessages.resource.messages.map(message => {
@@ -182,11 +186,15 @@ class ThreadController {
                         id: message.id,
                         created_at: message.created_at,
                         content: message.content[0].text.value,
+                        createdBy: {
+                            name: foundTeam.resource.defaultAssistant.name,
+                            team: foundTeam.resource.name
+                        }
                     }
                 }
                 return { role: "user", ...message }
             })
-            helper.sendServerSuccessResponse(res, 200, allMessages, 'Fetched all threads')
+            helper.sendServerSuccessResponse(res, 200, { allMessages, resource: foundTeam.resource }, 'Fetched all threads')
         } catch (error) {
             helper.sendServerErrorResponse(res, 401, error, 'Error loading thread messages')
         }
