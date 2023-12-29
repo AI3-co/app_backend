@@ -15,7 +15,7 @@ class Helper {
   }
 
   sendServerErrorResponse(responseObject, statusCode, error, message) {
-    responseObject.status(statusCode).json({ error: error.error, message })
+    responseObject.status(statusCode).json({ error: error, message })
   }
 
   sendServerResponse(responseObject, statusCode, payload) {

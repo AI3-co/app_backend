@@ -43,11 +43,11 @@ export async function updateResource(model, resource, data) {
  */
 export async function pushUpdatesToResource(model, resource, data = { fieldToUpdate: '', newData: [] }) {
     try {
+        console.log({ resource, newData, model })
         const foundResource = await model.findById(resource.id)
         const { fieldToUpdate, newData } = data
         if (!foundResource) return { success: false, error: 'Could not find resource' }
 
-        console.log({ resource, newData })
 
         newData.forEach(_data => {
             foundResource[fieldToUpdate].push(_data)
