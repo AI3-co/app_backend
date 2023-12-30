@@ -43,11 +43,9 @@ export async function updateResource(model, resource, data) {
  */
 export async function pushUpdatesToResource(model, resource, data = { fieldToUpdate: '', newData: [] }) {
     try {
-        console.log({ resource, newData, model })
         const foundResource = await model.findById(resource.id)
         const { fieldToUpdate, newData } = data
         if (!foundResource) return { success: false, error: 'Could not find resource' }
-
 
         newData.forEach(_data => {
             foundResource[fieldToUpdate].push(_data)
@@ -109,9 +107,11 @@ export async function getSingleResourceAndPopulateFields(model, resource, fields
     }
 }
 
-export async function getAllResourceAndPopulateRefFields(model, fields = []) {
+export async function getAllResourceAndPopulateRefFields(model, fields = [], filter) {
     try {
         let query = model.find()
+
+        if (filter) query = model.find(filter)
 
         fields.forEach(field => {
             query = query.populate(field)

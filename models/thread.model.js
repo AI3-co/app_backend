@@ -13,7 +13,12 @@ const ThreadSchema = new Schema({
         type: String,
         default: 'Untitled', // use ai to automate title generation
     },
-    messages: { // !TODO - Revert back to using a ref and ObjectID type
+    messages: {
+        type: [Schema.Types.ObjectId],
+        ref: "Message",
+        required: true
+    },
+    tags: {
         type: [],
     },
     oaiThreadID: {
@@ -26,6 +31,8 @@ const ThreadSchema = new Schema({
         required: true
     }
 }, { timestamps: true })
+
+// ThreadSchema.virtual()
 
 ThreadSchema.set('toJSON', helper.formatModelResponse())
 
