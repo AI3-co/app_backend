@@ -1,7 +1,9 @@
+import Helper from '../helpers/helpers.js';
 import Assistant from '../models/assistant.model.js'
-import { createResource } from '../repos/db.js';
+import { createResource, getSingleResourceAndPopulateFields } from '../repos/db.js';
 import { buildAssistant } from '../services/openAI.service.js';
 
+const helper = new Helper()
 class AssistantController {
 
     async createAssistant(req, res, next) {
@@ -29,8 +31,17 @@ class AssistantController {
 
     }
 
-    async getAssistant(req, res, next) {
-        res.send('Got all assistants')
+    async getSingleAssistant(req, res, next) {
+        try {
+            const assistantID = req.params.id
+            if (!assistantID) throw Error('You need an assistant')
+            const foundAssistant = await getSingleResourceAndPopulateFields(Assistant, { id: assistantID })
+            if (!foundAssistant.success || !foundAssistant.resource) throw Error('Could not find assistant')
+
+            helper.sendServerSuccessResponse(res, 200, foundAssistant.resource, 'Found assistant')
+        } catch (error) {
+            helper.sendServerErrorResponse(res, 400, error, 'Error finding assistant')
+        }
         // const resource = { model: Assistant, message: "Assistant found" }
         // const foundAssistant = await getResources(req, res, next, resource)
         // console.log('Found Assistant', foundAssistant)

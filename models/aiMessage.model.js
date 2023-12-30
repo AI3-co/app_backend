@@ -1,7 +1,7 @@
 import { Schema, model } from 'mongoose'
 import { MESSAGE_ENTITY_ROLE } from '../helpers/enum.js'
 
-const MessageSchema = new Schema({
+const AIMessageSchema = new Schema({
     content: {
         type: String,
         required: true
@@ -16,10 +16,9 @@ const MessageSchema = new Schema({
         ref: 'Thread',
         required: true
     },
-    role: {
+    type: {
         type: String,
-        required: true,
-        enum: ['assistant', 'user']
+        default: 'assistant'
     },
     oaiMessageID: {
         type: String,
@@ -27,13 +26,6 @@ const MessageSchema = new Schema({
     }
 }, { timestamps: true })
 
-// MessageSchema.virtual('createdByRef', {
-//     ref: function (doc) {
-//         console.log({ doc })
-//         return doc.role === 'user' ? 'User' : 'Assistant'
-//     },
-//     localField: 'role',
-//     foreignField: "_id",
-// })
 
-export default model('Message', MessageSchema)
+
+export default model('AIMessage', AIMessageSchema)
