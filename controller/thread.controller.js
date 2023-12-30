@@ -121,18 +121,31 @@ class ThreadController {
             const newMessages = await fetchThreadMessages(foundThread.resource.oaiThreadID)
 
             // console.log({ NEW_MESSAGE: newThreadMessage.resource, NEW_AI3_MESSAGE: newAI3ThreadMessage })
-
-
-
             const saveResponseToThread = await pushUpdatesToResource(Thread, { id: threadID }, { fieldToUpdate: 'messages', newData: [newAI3ThreadMessage.resource] })
             console.log({ saveResponseToThread, newAI3ThreadMessage })
 
             if (!saveResponseToThread.success) throw Error('Could not save response to thread: ' + saveResponseToThread.message)
 
+            const users = await getAllResources(User)
+            const foundUser = users.resource.filter(user => user._id.toString() === newAI3ThreadMessage.resource.createdBy.toString())[0]
 
+            let userMessage = {
+                // content, thread, createdBy, role, oaiMessageID, createdAt, updatedAt, id
+                content: newAI3ThreadMessage.resource.content,
+                thread: newAI3ThreadMessage.resource.thread,
+                oaiMessageID: newAI3ThreadMessage.resource.oaiMessageID,
+                role: newAI3ThreadMessage.resource.role,
+                createdBy: {
+                    firstName: foundUser.firstName,
+                    lastName: foundUser.lastName,
+                },
+                createdAt: newAI3ThreadMessage.resource.createdAt,
+                updatedAt: newAI3ThreadMessage.resource.updatedAt,
+                id: newAI3ThreadMessage.resource._id
+            }
             //const foundUser = await getResourceById(User, { id: userID })
 
-            helper.sendServerSuccessResponse(res, 200, { messages: newMessages, teamID, threadID, userID })
+            helper.sendServerSuccessResponse(res, 200, userMessage)
         } catch (error) {
             helper.sendServerErrorResponse(res, 401, error, 'Error updating thread with messages')
         }
@@ -208,11 +221,7 @@ class ThreadController {
             //     role: MESSAGE_ENTITY_ROLE.ASSISTANT
             // }
             // if (!updateThreadWithLastMessage.success) throw Error('Could not update thread with last message: ')
-            const testLoad = {
-                lastThreadMessage,
-                allThreadMessages,
-                ai3LastMessages: threads.resource.messages
-            }
+
 
             if (!allThreadMessages.resource[0].content[0].text.value)
                 allThreadMessages = await fetchThreadMessages(oaiThreadID)
