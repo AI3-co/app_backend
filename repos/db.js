@@ -21,12 +21,15 @@ export async function createResource(model, data) {
 
 export async function updateResource(model, resource, data) {
     try {
+
+        // console.log({ updatePayload: { data, resource } })
+
         let resourceID = resource.id
 
         if (!resourceID) return { msg: 'No Resource ID supplied', success: false }
 
         let currentModel = await model.findByIdAndUpdate(resourceID, data, { new: true })
-        console.log('UpdateResource()', { resource, data, currentModel })
+        // console.log('UpdateResource()', { resource, data, currentModel })
 
         return { resource: currentModel, success: true }
     } catch (error) {
@@ -51,7 +54,7 @@ export async function pushUpdatesToResource(model, resource, data = { fieldToUpd
             foundResource[fieldToUpdate].push(_data)
         })
 
-        console.log({ foundResource })
+        // console.log({ foundResource })
 
         await foundResource.save()
 
@@ -83,9 +86,20 @@ export async function deleteResource(req, res, next, resource) {
 //     }
 // }
 
-export async function getAllResources(model, resource) {
+export async function getAllResources(model, filter) {
     try {
-        let foundResource = await model.find()
+        let foundResource
+
+        if (filter) {
+            console.log('Has filter: ', filter)
+            foundResource = await model.find(filter)
+            console.log({ seen: foundResource })
+        }
+
+        foundResource = await model.find()
+
+        console.log()
+
         return { resource: foundResource, success: true }
     } catch (error) {
         return { msg: 'Error updating resource', error: error.message, success: false }
@@ -110,7 +124,7 @@ export async function getSingleResourceAndPopulateFields(model, resource, fields
 export async function getAllResourceAndPopulateRefFields(model, fields = [], filter) {
     try {
         let query = model.find()
-
+        console.log(filter)
         if (filter) query = model.find(filter)
 
         fields.forEach(field => {

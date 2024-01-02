@@ -20,7 +20,7 @@ class Helper {
    * @returns
    */
   handleCreatorPopulation(message = {}, users = [], assistants = []) {
-    console.log({ message, users, assistants })
+    // console.log({ message, users, assistants })
     let populatedMessage
     if (message.role === MESSAGE_ENTITY_ROLE.USER) {
       const currentUser = users.filter(user => user._id.toString() === message.createdBy.toString())[0]
@@ -37,6 +37,7 @@ class Helper {
         updatedAt: message.updatedAt,
         id: message._id
       }
+
       return populatedMessage
     } else if (message.role === MESSAGE_ENTITY_ROLE.ASSISTANT) {
       const currentAssistant = assistants.filter(assistant => assistant._id.toString() === message.createdBy.toString())[0]

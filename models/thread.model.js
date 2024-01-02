@@ -25,6 +25,9 @@ const ThreadSchema = new Schema({
         type: String,
         required: true
     },
+    runID: {
+        type: String,
+    },
     team: {
         type: Schema.Types.ObjectId,
         ref: "Team",
