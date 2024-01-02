@@ -51,19 +51,20 @@ export async function createThreadMessage(threadID, message) {
     }
 }
 
-// export async function retrieveRun(threadID, runID) {
-//     try {
-//         const retrievedRun = await openai.beta.threads.runs.retrieve(threadID, runID)
-//         console.log('runAssistantOnThread=>()', { data: retrievedRun, success: true })
-//         return { resource: retrievedRun, success: true }
-//     } catch (error) {
-//         return {
-//             error: 'Error fetching run on thread',
-//             success: false,
-//             message: error.message
-//         }
-//     }
-// }
+export async function retrieveRun(threadID, runID) {
+    try {
+        console.log({ threadID, runID })
+        const retrievedRun = await openai.beta.threads.runs.retrieve(threadID, runID)
+        console.log('retrieveRunThread=>()', { data: retrievedRun, success: true })
+        return { resource: retrievedRun, success: true }
+    } catch (error) {
+        return {
+            error: 'Error fetching run on thread',
+            success: false,
+            message: error.message
+        }
+    }
+}
 
 export async function runAssistantOnThread(threadID, assistantID) {
     try {
@@ -80,6 +81,18 @@ export async function runAssistantOnThread(threadID, assistantID) {
         }
     }
 }
+
+// export async function fetchThreadRun() {
+//     try {
+//         const threadRun = await openai.beta.threads.runs.retr
+//     } catch (error) {
+//         return {
+//             error: 'Error running assistant on thread',
+//             success: false,
+//             message: error.message
+//         }
+//     }
+// }
 
 export async function fetchThreadMessages(threadID) {
     try {

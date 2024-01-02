@@ -1,11 +1,13 @@
 import Helper from "../helpers/helpers.js";
-import { createResource, getAllResourceAndPopulateRefFields, getAllResources, getResourceById, getSingleResourceAndPopulateFields, pushUpdatesToResource, updateResource } from "../repos/db.js";
+import { createResource, getAllResourceAndPopulateRefFields, getAllResources, getResourceByField, getResourceById, getSingleResourceAndPopulateFields, pushUpdatesToResource, updateResource } from "../repos/db.js";
 import User from "../models/user.model.js"
 import Assistant from "../models/assistant.model.js"
+import mongoose, { ObjectId } from "mongoose";
 import Message from "../models/message.model.js"
 import Thread from "../models/thread.model.js"
+import { Types } from 'mongoose'
 import Team from "../models/team.model.js"
-import { createOAIThread, createThreadMessage, fetchThreadMessages, runAssistantOnThread } from "../services/openAI.service.js";
+import { createOAIThread, createThreadMessage, fetchThreadMessages, retrieveRun, runAssistantOnThread } from "../services/openAI.service.js";
 import { MESSAGE_ENTITY_ROLE } from "../helpers/enum.js"
 
 const helper = new Helper()
@@ -23,7 +25,7 @@ class ThreadController {
 
             if (!teamID) throw new Error('Threads can only be created under teams')
             const oaiNewThread = await createOAIThread()
-            console.log({ oaiNewThreadee: oaiNewThread })
+            // console.log({ oaiNewThreadee: oaiNewThread })
 
             if (!oaiNewThread.success) throw new Error('Could not create thread via 3rd party: ' + oaiNewThread.error)
 
@@ -33,7 +35,7 @@ class ThreadController {
                 team: teamID,
             }
 
-            console.log({ threadPayload })
+            // console.log({ threadPayload })
 
             const newThread = await createResource(Thread, threadPayload)
 
@@ -44,12 +46,17 @@ class ThreadController {
                 newData: [newThread.resource]
             }
 
-            console.log({ teamUpdatePayload })
+            // console.log({ teamUpdatePayload, data: teamUpdatePayload.newData })
             await pushUpdatesToResource(Team, { id: teamID }, teamUpdatePayload)
-            await updateResource(Team, { id: teamID }, { lastVisitedThread: newThread.resource.id })
+            const updateLastVisited = await updateResource(Team, { id: teamID }, { lastVisitedThread: newThread.resource.id })
+            // console.log({ lastVisited: updateLastVisited })
+
             await updateResource(Thread, { id: newThread.resource.id }, { team: teamID })
 
-            helper.sendServerSuccessResponse(res, 201, newThread.resource)
+            const updatedTeamDetails = await Team.find({ organization: updateLastVisited.resource.organization })
+            // console.log({ updatedTeamDetails })
+
+            helper.sendServerSuccessResponse(res, 201, updatedTeamDetails)
         } catch (error) {
             helper.sendServerErrorResponse(res, 401, error, 'Error creating thread')
         }
@@ -83,6 +90,8 @@ class ThreadController {
 
             const foundTeam = await getSingleResourceAndPopulateFields(Team, { id: teamID }, ['defaultAssistant'])
 
+            console.log({ foundThread, teamID, threadID })
+
             if (!foundTeam.success) throw Error('Could not find team: ' + foundTeam.error)
 
             // console.log({ foundThread, foundTeam })
@@ -103,15 +112,19 @@ class ThreadController {
                 thread: threadID,
                 role: "user"
             }
-            console.log({ newAI3MessagePayload: newAI3Message })
+            // console.log({ newAI3MessagePayload: newAI3Message })
 
             const newAI3ThreadMessage = await createResource(Message, newAI3Message)
+
+            console.log({ newAI3ThreadMessage })
 
             if (!newAI3ThreadMessage.success) throw Error('Could not create ai3 message')
 
             const recentRunOnThread = await runAssistantOnThread(foundThread.resource.oaiThreadID, defaultAssistantID)
 
-            if (!recentRunOnThread.success) throw Error('Could not run assistant on thread: ' + recentRunOnThread.message)
+            // console.log({ recentRunOnThread })
+
+            if (!recentRunOnThread.success || !recentRunOnThread.resource) throw Error('Could not run assistant on thread: ' + recentRunOnThread.message)
 
             // console.log({ recentRunOnThread })
             /**
@@ -121,6 +134,9 @@ class ThreadController {
             const newMessages = await fetchThreadMessages(foundThread.resource.oaiThreadID)
 
             // console.log({ NEW_MESSAGE: newThreadMessage.resource, NEW_AI3_MESSAGE: newAI3ThreadMessage })
+            // console.log({ recentRunOnThread: recentRunOnThread.resource })
+            const updateThreadRunID = await updateResource(Thread, { id: threadID }, { runID: recentRunOnThread.resource.runResponse.id })
+            console.log({ updateThreadRunID })
             const saveResponseToThread = await pushUpdatesToResource(Thread, { id: threadID }, { fieldToUpdate: 'messages', newData: [newAI3ThreadMessage.resource] })
             console.log({ saveResponseToThread, newAI3ThreadMessage })
 
@@ -161,91 +177,108 @@ class ThreadController {
             const threads = await getSingleResourceAndPopulateFields(Thread, { id: threadID }, ['messages'])
             const teamID = threads.resource.team
             const foundTeam = await getSingleResourceAndPopulateFields(Team, { id: teamID }, ['defaultAssistant'])
-            console.log({ threadHERE: threads, team: foundTeam.resource })
-
             const oaiThreadID = threads.resource.oaiThreadID
-            allThreadMessages = await fetchThreadMessages(oaiThreadID)
-            const lastThreadMessage = allThreadMessages.resource[0]
-            const ai3LastMessage = threads.resource.messages[threads.resource.messages.length - 1]
+            // console.log({ threadHERE: threads, team: foundTeam.resource })
 
-            // console.log({ threads: threads.resource.messages, threadID, lastThreadMessage, ai3LastMessage })
-            // if (ai3LastMessage.role === MESSAGE_ENTITY_ROLE.ASSISTANT) {
-            //     const newAIResponse = {
-            //         content: lastThreadMessage.content,
-            //         createdBy: foundTeam.resource.defaultAssistant._id,
-            //         oaiMessageID: lastThreadMessage.oaiMessageID,
-            //         thread: threadID,
-            //         role: MESSAGE_ENTITY_ROLE.ASSISTANT
-            //     }
-            // }
-            /*
-            !TODO - eventually => store ai responses as a message first then pass that id into thread as message reference
-             */
-            // if (lastThreadMessage.role === 'assistant' && ai3LastMessage.role !== "assistant" && ai3LastMessage?.content?.[0]?.text?.value !== "") {
-            console.log({ hasText: ai3LastMessage?.content?.[0]?.text?.value, lastThreadMessage, ai3LastMessage, allThreadMessages: allThreadMessages.resource[0], oaiThreadID })
-            if (ai3LastMessage.role === MESSAGE_ENTITY_ROLE.USER) {
-                console.log('saving ai response')
+            // const runStatus = await retrieveRun(oaiThreadID, threads.resource.runID)
+
+            // console.log({ runStatus })
+
+            // let isRunComplete = false
+            let runStatus = null
+
+            console.log({ preRunStatus: runStatus })
+            async function waitUntilRunComplete(threadId, runId) {
+                return new Promise(resolve => {
+                    const checkRunStatus = async () => {
+                        runStatus = await retrieveRun(threadId, runId)
+                        if (runStatus.resource.status === 'completed') {
+                            resolve()
+                        } else {
+                            setTimeout(checkRunStatus, 500)
+                        }
+                    }
+                    checkRunStatus()
+                })
+            }
+
+            await waitUntilRunComplete(oaiThreadID, threads.resource.runID)
+
+            // console.log({ runStage })
+
+            console.log('RunBefore Proceed', { runStatus })
+
+            if (runStatus && runStatus.resource.status === 'completed') {
+                allThreadMessages = await fetchThreadMessages(oaiThreadID)
+                const lastThreadMessage = allThreadMessages.resource[0]
+                const ai3LastMessage = threads.resource.messages[threads.resource.messages.length - 1]
+                const defaultAssistantID = foundTeam.resource.defaultAssistant._id
+
+                const assistants = await getAllResources(Assistant)
+
+                const foundAssistant = assistants.resource.filter(assistant => assistant._id.toString() === defaultAssistantID.toString())[0]
+                // console.log({ foundAssistant, foundTeam })
                 aiResponse = {
                     content: allThreadMessages.resource[0].content[0].text.value,
-                    createdBy: foundTeam.resource.defaultAssistant._id,
+                    createdBy: {
+                        name: foundAssistant.name
+                    },
                     oaiMessageID: allThreadMessages.resource[0].thread_id,
                     thread: threadID,
                     role: MESSAGE_ENTITY_ROLE.ASSISTANT
                 }
-                const createAIResponse = await createResource(Message, aiResponse)
-                if (!createAIResponse.success) throw Error('Could not create ai3 message' + createAIResponse.error)
-                console.log({ createAIResponse })
-                updateThreadWithLastMessage = await pushUpdatesToResource(
-                    Thread,
-                    { id: threadID },
-                    { fieldToUpdate: 'messages', newData: [createAIResponse.resource._id] }
-                )
-                console.log({ updateThreadWithLastMessage, aiResponse })
-                if (!updateThreadWithLastMessage.success) throw Error('Could not update thread with last message: ')
-                // const aiResponse = {
-                //     content: ai3LastMessage.content[0].text.value,
-                //     createdBy: req.user.userId,
-                //     oaiMessageID: newThreadMessage.resource.thread_id,
-                //     thread: threadID,
-                //     role: "user"
-                // }
-                // const newAIResponseMsg = await createResource(Message, lastThreadMessage)
-                // if (!newAIResponseMsg.success) throw Error('Could not create ai3 message')
-                // console.log({ newAIResponseMsg })
+                console.log('saving ai response', { aiResponse: { response: aiResponse } })
+
+                if (ai3LastMessage.role === MESSAGE_ENTITY_ROLE.USER) {
+                    console.log('[user]-lastMessage')
+                    const createAIResponse = await createResource(Message, { ...aiResponse, createdBy: defaultAssistantID })
+                    console.log({ createAIResponse })
+                    if (!createAIResponse.success) throw Error('Could not create ai3 message - ' + createAIResponse.error)
+                    updateThreadWithLastMessage = await pushUpdatesToResource(
+                        Thread,
+                        { id: threadID },
+                        { fieldToUpdate: 'messages', newData: [createAIResponse.resource._id] }
+                    )
+                    console.log({ updateThreadWithLastMessage })
+                    if (!updateThreadWithLastMessage.success) throw Error('Could not update thread with last message: ')
+                }
+
+                console.log('savedAI Response')
+
+            } else {
+                console.log('FIRE WAIT RUN', { runStatus })
+
             }
-            // const aiResponse = {
-            //     content: ai3LastMessage.content[0].text.value,
-            //     createdBy: req.user.userId,
-            //     oaiMessageID: ai3LastMessage.thread_id,
-            //     thread: threadID,
-            //     role: MESSAGE_ENTITY_ROLE.ASSISTANT
-            // }
-            // if (!updateThreadWithLastMessage.success) throw Error('Could not update thread with last message: ')
 
 
-            if (!allThreadMessages.resource[0].content[0].text.value)
-                allThreadMessages = await fetchThreadMessages(oaiThreadID)
+            console.log('Now Return AI Response', { aiResponse })
+            helper.sendServerSuccessResponse(res, 200, { aiResponse }, 'Found all messages in thread')
 
-            // console.log({ lastThreadMessage, ai3LastMessage, updateThreadWithLastMessage, content: ai3LastMessage.content[0] })
-            helper.sendServerSuccessResponse(res, 200, { aiResponse, allThreadMessages: allThreadMessages.resource })
         } catch (error) {
-            helper.sendServerErrorResponse(res, 401, error, error.message)
+            helper.sendServerErrorResponse(res, 500, error, error.message)
         }
     }
 
     async loadThreadMessages(req, res, next) {
         try {
-            const threadID = req.params.thread
+            const threadID = new Types.ObjectId(req.params.thread)
             const teamID = req.params.team
             if (!threadID) throw Error('You need a thread')
             // find all Messages that match the threadID
-            const threadMessages = await getAllResourceAndPopulateRefFields(Message, [''], { thread: threadID })
+            console.log({ threadID })
+            // const threadMessages = await getAllResources(Message, { thread: threadID })
+            const threadMessages = await Message.find({ thread: threadID })
+            const singleThread = await getResourceById(Thread, { id: threadID })
 
-            const sortedThreadMessages = threadMessages.resource.sort((a, b) => b.createdAt - a.createdAt)
+            console.log({ singleThread: singleThread.resource })
+            console.log({ threadMessages })
+
+            const sortedThreadMessages = threadMessages.sort((a, b) => b.createdAt - a.createdAt)
 
             const users = await getAllResources(User)
             const assistants = await getAllResources(Assistant)
             const populateCreatedBy = sortedThreadMessages.map(message => helper.handleCreatorPopulation(message, users.resource, assistants.resource))
+            // console.log({ loadedMessages: populateCreatedBy[0], })
 
             console.log({ populateCreatedBy })
             helper.sendServerSuccessResponse(res, 200, populateCreatedBy, 'Fetched all threads')

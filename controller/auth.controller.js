@@ -47,15 +47,18 @@ export default class AuthController extends BaseController {
 
             // populate user teams
             const selectedOrganization = await getResourceById(Organization, { id: user.resource.selectedOrganization })
-            if (!selectedOrganization.success) throw Error('Could not find selected organization')
-            await selectedOrganization.resource.populate('teams')
+            // if (!selectedOrganization.success) throw Error('Could not find selected organization')
+            selectedOrganization.resource && await selectedOrganization.resource.populate('teams')
 
             if (selectedOrganization.resource)
                 user.resource.selectedOrganization = selectedOrganization.resource
+            else
+                user.resource.selectedOrganization = null
 
             helper.sendServerSuccessResponse(res, 200, user.resource)
         } catch (error) {
-            helper.sendServerErrorResponse(res, 401, error, 'Error fetching user informations')
+            console.log(error)
+            helper.sendServerErrorResponse(res, 500, error, 'Error fetching user informations')
         }
     }
 

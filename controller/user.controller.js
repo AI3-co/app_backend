@@ -23,7 +23,7 @@ class UserController extends BaseController {
         // get all users
         try {
             const allUsers = await getAllResourceAndPopulateRefFields(User, ['teams', 'organizations'])
-            console.log({ allUsers })
+            // console.log({ allUsers })
             res.status(200).json({ data: allUsers, message: "All users fetched" })
         } catch (error) {
             res.status(401).json({ error: 'Error Fetching all users', message: error.message })
@@ -33,7 +33,7 @@ class UserController extends BaseController {
     async getSingleUser(req, res, next) {
         // fetch a single user
         // const data = await getResources(req, res, next, { model: User, message: "User found" })
-        console.log('Data', data)
+        // console.log('Data', data)
     }
 
     async updateSingleUser(req, res, next) {

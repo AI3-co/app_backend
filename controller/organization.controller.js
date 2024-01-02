@@ -100,7 +100,8 @@ class OrganizationController {
                 await pushUpdatesToResource(User, { id: req.user.userId }, { fieldToUpdate: 'organizations', newData: [newOrgID] })
                 await pushUpdatesToResource(User, { id: req.user.userId }, { fieldToUpdate: 'teams', newData: teamIDs })
                 await updateResource(User, { id: req.user.userId }, { selectedOrganization: newOrgID }) // makes the newly created organization the selected organization
-                return { _assistants, _createdAssistants, _teams, newOrganization: newOrganization.resource }
+                // return { _assistants, _createdAssistants, _teams, newOrganization: newOrganization.resource }
+                return { newOrganization: newOrganization.resource }
             }
 
             const createdGroup = newOrganization.success && await createOrganizationGroup()
