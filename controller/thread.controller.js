@@ -56,7 +56,7 @@ class ThreadController {
             const updatedTeamDetails = await Team.find({ organization: updateLastVisited.resource.organization })
             // console.log({ updatedTeamDetails })
 
-            helper.sendServerSuccessResponse(res, 201, updatedTeamDetails)
+            helper.sendServerSuccessResponse(res, 201, { updatedTeamDetails, newThread: newThread.resource })
         } catch (error) {
             helper.sendServerErrorResponse(res, 401, error, 'Error creating thread')
         }
