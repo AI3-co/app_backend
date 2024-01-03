@@ -67,7 +67,8 @@ class OrganizationController {
                         let _team = {
                             name: template.name,
                             organization: newOrgID,
-                            createdBy: req?.user?.userId
+                            createdBy: req?.user?.userId,
+                            members: [req?.user?.userId]
                         }
 
                         const newTeam = await createResource(Team, _team)
@@ -85,7 +86,8 @@ class OrganizationController {
                         let _assistant = {
                             ...assistantConfig,
                             openaiID: builtAssistant.createdAssistant.id,
-                            teams: [newTeam.resource._id.toString()]
+                            teams: [newTeam.resource._id.toString()],
+                            createdBy: req?.user?.userId
                         }
                         const newAssistant = await createResource(Assistant, _assistant)
                         await pushUpdatesToResource(Team, { id: newTeam.resource._id.toString() }, { fieldToUpdate: 'assistants', newData: [newAssistant.resource.id] })

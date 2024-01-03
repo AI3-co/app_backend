@@ -4,6 +4,10 @@ import Helper from '../helpers/helpers.js'
 const helper = new Helper()
 
 const AssistantSchema = new Schema({
+    createdBy: {
+        type: Schema.Types.ObjectId,
+        ref: "User"
+    },
     name: {
         type: String,
         required: true
