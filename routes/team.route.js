@@ -6,6 +6,7 @@ const tC = new TeamController()
 
 router
     .get("/:id", tC.getSingleTeam)
+    .get("/:id/details", tC.getTeamDetails)
     .get("/:id/threads", tC.getTeamThreads)
     .get("/", tC.getAllTeams)
     .post("/", tC.createTeam)
