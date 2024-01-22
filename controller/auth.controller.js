@@ -1,16 +1,58 @@
 import Helper from '../helpers/helpers.js'
 import { signToken } from '../middlewares/jwt.js'
+import { EmailClient } from '@azure/communication-email'
 import Team from "../models/team.model.js"
 import User from '../models/user.model.js'
 import Organization from "../models/organization.model.js"
 import { createResource, getResourceByField, getResourceById, getSingleResourceAndPopulateFields } from '../repos/db.js'
 import BaseController from './base.controller.js'
+import { MICROSOFT_AUTH_ACTIONS, USER_AUTH_TYPES } from '../helpers/enum.js'
 
 const helper = new Helper()
 
 export default class AuthController extends BaseController {
     constructor(model) {
         super(model)
+    }
+
+    async checkIfUserExists(req, res, next) {
+        let userExists = false
+        let authType = req.body.type
+        let responseMessage = ''
+        const email = req.body.email
+        let queryField
+        try {
+            if (authType === USER_AUTH_TYPES.EMAIL) {
+                // search for this user based on the type
+                queryField = USER_AUTH_TYPES.EMAIL
+            }
+
+            if (authType === USER_AUTH_TYPES.GOOGLE) {
+                //
+                queryField = USER_AUTH_TYPES.GOOGLE + "Email"
+            }
+
+
+            if (authType === USER_AUTH_TYPES.MICROSOFT) {
+                //
+                queryField = USER_AUTH_TYPES.MICROSOFT + "Email"
+            }
+
+            const foundUser = await getResourceByField(User, { field: queryField, value: email })
+
+            console.log({ foundUser, queryField, email })
+
+            if (foundUser.resource && foundUser.resource[queryField] === email) {
+                userExists = true
+                responseMessage = 'User exists'
+            } else {
+                responseMessage = 'User does not exist'
+            }
+
+            helper.sendServerSuccessResponse(res, 200, { userExists }, responseMessage)
+        } catch (error) {
+            helper.sendServerErrorResponse(res, 500, error, 'Error checking if user exists')
+        }
     }
 
     async logUserIn(req, res, next) {
@@ -50,11 +92,13 @@ export default class AuthController extends BaseController {
             // if (!selectedOrganization.success) throw Error('Could not find selected organization')
             selectedOrganization.resource && await selectedOrganization.resource.populate('teams')
 
+            console.log({ "auth_select_org": selectedOrganization })
+
             if (selectedOrganization.resource)
                 user.resource.selectedOrganization = selectedOrganization.resource
             else
                 user.resource.selectedOrganization = null
-
+            console.log({ "user_resource": user.resource })
             helper.sendServerSuccessResponse(res, 200, user.resource)
         } catch (error) {
             console.log(error)
@@ -77,9 +121,7 @@ export default class AuthController extends BaseController {
             if (newUser.error) {
                 throw new Error(newUser.error);
             }
-
-            const userToken = signToken({ email: newUser.resource.email, role: newUser.resource.role, newUserId: newUser.resource.id })
-
+            const userToken = signToken({ email: newUser.resource.email, role: newUser.resource.role, userId: newUser.resource.id })
             res.status(201).json({ message: 'New user created successfully', data: { token: userToken } })
         } catch (error) {
             res.status(401).json({ message: 'Could not create new user', error: error.message })
@@ -107,4 +149,57 @@ export default class AuthController extends BaseController {
         // verify the user's email is correct
     }
 
+    async handleMicrosoftAccountCreation(req, res) {
+        try {
+            // console.log({ req })
+            const { firstName, lastName, email, password } = req.body
+            const newUser = {
+                firstName,
+                lastName: lastName ?? "N/A",
+                microsoftPassword: password,
+                microsoftEmail: email,
+                email: "null@" + email,
+                password: "null",
+            }
+
+            console.log({ newUser })
+
+            const savedUser = await createResource(User, newUser)
+
+            console.log({ savedUser })
+
+            helper.sendServerSuccessResponse(res, 200, { savedUser: savedUser.resource }, 'Response from MCO')
+        } catch (error) {
+            helper.sendServerErrorResponse(res, 400, error, error.error)
+        }
+    }
+
+    async handleMicrosoftAccountSignIn(req, res) {
+        try {
+            // check if user with email exists
+            // check if the token sent over request is the same as what is stored, if it is return the approapriate action (authenticate, re-authenticate)
+            // console.log({ req })
+            let userAction;
+
+            const { microsoftEmail, microsoftPassword, ...rest } = req.body
+
+            console.log({ microsoftEmail, microsoftPassword, rest })
+
+            const user = await getResourceByField(User, { field: 'microsoftEmail', value: microsoftEmail })
+
+            console.log({ user })
+
+            const userObj = {
+                userId: user.resource.id,
+                email: user.resource.microsoftEmail,
+                role: user.resource.role
+            }
+            console.log({ userObj })
+
+            const userToken = signToken(userObj)
+            helper.sendServerSuccessResponse(res, 200, { user: userObj, token: userToken }, 'Response from MCO')
+        } catch (error) {
+            helper.sendServerErrorResponse(res, 400, error, error.error)
+        }
+    }
 }

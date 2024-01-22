@@ -18,7 +18,6 @@ const AssistantSchema = new Schema({
     },
     alias: {
         type: String,
-        required: true
     },
     openaiID: {
         type: String,
