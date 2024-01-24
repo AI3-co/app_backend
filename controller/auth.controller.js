@@ -32,7 +32,6 @@ export default class AuthController extends BaseController {
                 queryField = USER_AUTH_TYPES.GOOGLE + "Email"
             }
 
-
             if (authType === USER_AUTH_TYPES.MICROSOFT) {
                 //
                 queryField = USER_AUTH_TYPES.MICROSOFT + "Email"
@@ -64,6 +63,7 @@ export default class AuthController extends BaseController {
         try {
             const user = await getResourceByField(User, { field: 'email', value: req.body.email })
             // check password
+            console.log({body: Object.keys(req.body)})
             if (!user.resource) {
                 throw new Error('User not found')
             } else if (user.resource.password !== req.body.password) {
@@ -116,6 +116,11 @@ export default class AuthController extends BaseController {
 
         try {
             const userDetails = req.body
+
+            console.log({ userDetails})
+
+            // consy 
+            
             const newUser = await createResource(User, userDetails)
 
             if (newUser.error) {
@@ -149,6 +154,58 @@ export default class AuthController extends BaseController {
         // verify the user's email is correct
     }
 
+    async handleGoogleAccountCreation(req, res) {
+        try {
+            const {firstName, lastName, email, password} = req.body
+
+            const newUser = {
+                firstName,
+                lastName: lastName ?? "N/A",
+                googlePassword: password,
+                googleEmail: email,
+                email: "null@" + email,
+                password: "null",
+            }
+
+            console.log({ newUser })
+
+            const savedUser = await createResource(User, newUser)
+
+            console.log({ savedUser })
+            
+            if (savedUser.error) {
+                throw new Error(savedUser.error)
+            }
+
+           const userToken = signToken({ email: savedUser.resource.email, role: savedUser.resource.role, userId: savedUser.resource.id })
+
+            helper.sendServerSuccessResponse(res, 200, { newUser: savedUser.resource, token: userToken }, 'Gooogle Login')
+        } catch (error) {
+            helper.sendServerErrorResponse(res, 400, error, error.error)
+        }
+    }
+
+    async handleGoogleAccountSignIn(req, res) {
+        try {
+            const { googleEmail, googlePassword, ...rest } = req.body
+            console.log({ googleEmail, googlePassword, rest })
+        } catch (error) {
+            const user = await getResourceByField(User, { field: 'googleEmail', value: googleEmail })
+            console.log({ user })
+            if (!user.resource) {
+                throw new Error('User Not Found')
+            }
+            const userObj = {
+                userId: user.resource.id,
+                email: user.resource.googleEmail,
+                role: user.resource.role
+            }
+            console.log({ userObj })
+            const userToken = signToken(userObj)
+            helper.sendServerSuccessResponse(res, 200, { user: userObj, token: userToken }, 'Logged in successfully')
+        }
+    }
+    
     async handleMicrosoftAccountCreation(req, res) {
         try {
             // console.log({ req })
@@ -167,8 +224,14 @@ export default class AuthController extends BaseController {
             const savedUser = await createResource(User, newUser)
 
             console.log({ savedUser })
+            
+            if (savedUser.error) {
+                throw new Error(savedUser.error)
+            }
 
-            helper.sendServerSuccessResponse(res, 200, { savedUser: savedUser.resource }, 'Response from MCO')
+           const userToken = signToken({ email: savedUser.resource.email, role: savedUser.resource.role, userId: savedUser.resource.id })
+
+            helper.sendServerSuccessResponse(res, 200, { newUser: savedUser.resource, token: userToken }, 'Microsoft Login')
         } catch (error) {
             helper.sendServerErrorResponse(res, 400, error, error.error)
         }
@@ -189,6 +252,10 @@ export default class AuthController extends BaseController {
 
             console.log({ user })
 
+            if (!user.resource) {
+                throw new Error('User Not Found')
+            }
+
             const userObj = {
                 userId: user.resource.id,
                 email: user.resource.microsoftEmail,
@@ -197,7 +264,7 @@ export default class AuthController extends BaseController {
             console.log({ userObj })
 
             const userToken = signToken(userObj)
-            helper.sendServerSuccessResponse(res, 200, { user: userObj, token: userToken }, 'Response from MCO')
+            helper.sendServerSuccessResponse(res, 200, { user: userObj, token: userToken }, 'Logged in successfully')
         } catch (error) {
             helper.sendServerErrorResponse(res, 400, error, error.error)
         }
