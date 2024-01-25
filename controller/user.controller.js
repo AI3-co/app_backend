@@ -1,6 +1,9 @@
 import { createResource, getResourceById, getAllResources, getAllResourceAndPopulateRefFields } from "../repos/db.js";
 import BaseController from "./base.controller.js";
 import User from "../models/user.model.js"
+import Helper from "../helpers/helpers.js";
+
+const helper = new Helper()
 
 class UserController extends BaseController {
     constructor(model) {
@@ -30,10 +33,15 @@ class UserController extends BaseController {
         }
     }
 
-    async getSingleUser(req, res, next) {
-        // fetch a single user
-        // const data = await getResources(req, res, next, { model: User, message: "User found" })
-        // console.log('Data', data)
+    async getSingleUser(req, res) {
+        try {
+            const user = await getResourceById(User, {id: req.params.id})
+            console.log({ singleUser: user, id: req.params.id })
+            if (!user.resource) throw new Error("User not found")
+            helper.sendSuccessResponse(res, 200, user, "User found")
+        } catch (error) {
+            helper.sendServerErrorResponse(res, 404, error.message)
+        }
     }
 
     async updateSingleUser(req, res, next) {

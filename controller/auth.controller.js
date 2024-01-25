@@ -156,6 +156,7 @@ export default class AuthController extends BaseController {
 
     async handleGoogleAccountCreation(req, res) {
         try {
+            console.log({boDYFROMGOOGLE: req.body})
             const {firstName, lastName, email, password} = req.body
 
             const newUser = {
@@ -179,6 +180,8 @@ export default class AuthController extends BaseController {
 
            const userToken = signToken({ email: savedUser.resource.email, role: savedUser.resource.role, userId: savedUser.resource.id })
 
+           console.log({userTokenGoogle: userToken})
+
             helper.sendServerSuccessResponse(res, 200, { newUser: savedUser.resource, token: userToken }, 'Gooogle Login')
         } catch (error) {
             helper.sendServerErrorResponse(res, 400, error, error.error)
@@ -189,9 +192,8 @@ export default class AuthController extends BaseController {
         try {
             const { googleEmail, googlePassword, ...rest } = req.body
             console.log({ googleEmail, googlePassword, rest })
-        } catch (error) {
             const user = await getResourceByField(User, { field: 'googleEmail', value: googleEmail })
-            console.log({ user })
+            console.log({ googleUser: user })
             if (!user.resource) {
                 throw new Error('User Not Found')
             }
@@ -200,9 +202,11 @@ export default class AuthController extends BaseController {
                 email: user.resource.googleEmail,
                 role: user.resource.role
             }
-            console.log({ userObj })
+            console.log({ loginGoogleUser: userObj })
             const userToken = signToken(userObj)
             helper.sendServerSuccessResponse(res, 200, { user: userObj, token: userToken }, 'Logged in successfully')
+        } catch (error) {
+            helper.sendServerErrorResponse(res, 400, error, error.error)
         }
     }
     
@@ -230,7 +234,7 @@ export default class AuthController extends BaseController {
             }
 
            const userToken = signToken({ email: savedUser.resource.email, role: savedUser.resource.role, userId: savedUser.resource.id })
-
+            console.log('Last In>>', {newUser: savedUser.resource, token: userToken})
             helper.sendServerSuccessResponse(res, 200, { newUser: savedUser.resource, token: userToken }, 'Microsoft Login')
         } catch (error) {
             helper.sendServerErrorResponse(res, 400, error, error.error)
@@ -261,7 +265,7 @@ export default class AuthController extends BaseController {
                 email: user.resource.microsoftEmail,
                 role: user.resource.role
             }
-            console.log({ userObj })
+            console.log({ loginUserObj: userObj })
 
             const userToken = signToken(userObj)
             helper.sendServerSuccessResponse(res, 200, { user: userObj, token: userToken }, 'Logged in successfully')
