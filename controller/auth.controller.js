@@ -186,14 +186,17 @@ export default class AuthController extends BaseController {
             console.log({ microsoftEmail, microsoftPassword, rest })
 
             const user = await getResourceByField(User, { field: 'microsoftEmail', value: microsoftEmail })
-
+            let userObj = {}
             console.log({ user })
 
-            const userObj = {
-                userId: user.resource.id,
-                email: user.resource.microsoftEmail,
-                role: user.resource.role
+            if (user.resource) {
+                userObj = {
+                    userId: user.resource?.id,
+                    email: user.resource.microsoftEmail,
+                    role: user.resource.role
+                }
             }
+
             console.log({ userObj })
 
             const userToken = signToken(userObj)

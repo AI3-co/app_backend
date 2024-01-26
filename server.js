@@ -49,6 +49,7 @@ class Server {
     }
 
     addRoutes() {
+        this.app.use('/', (req, res) => res.send('Hi from AI3!'))
         this.app.use(this.versionThisRoute("/user"), userRoutes);
         this.app.use(this.versionThisRoute("/assistant"), assistantRoutes);
         this.app.use(this.versionThisRoute("/auth"), authRoutes);
