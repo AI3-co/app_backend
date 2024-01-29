@@ -5,6 +5,8 @@ import User from "../models/user.model.js";
 
 
 
+if (process.env.NODE_ENV !== "production") mongoose.set('debug', { shell: true })
+
 /**
  *
  * @param {Request} req
@@ -14,6 +16,7 @@ import User from "../models/user.model.js";
  * @param {Boolean} customLoad - This flag allows this method to use a prepacked object instead of the req
  * @returns
  */
+
 export async function createResource(model, data) {
     try {
         let resourceToBeSaved = await model(data)
@@ -199,6 +202,7 @@ export async function getManyResourcesByField(model, resource) {
 export async function getResourceByField(model, resource) {
     try {
         const { field, value } = resource
+        console.log({ field, value })
         let foundResource = await model.findOne({ [field]: value })
         return { resource: foundResource, success: true }
     } catch (error) {

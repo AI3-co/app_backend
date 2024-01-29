@@ -8,6 +8,9 @@ const router = Router()
 
 router
     .post("/", verifyUserAction, assistantController.createAssistant)
+    .post("/create/team", verifyUserAction, assistantController.createAssistantUnderTeam)
+    .get("/", verifyUserAction, assistantController.getAllAssistants)
     .get("/:id", verifyUserAction, assistantController.getSingleAssistant)
+    .patch("/:id/edit", verifyUserAction, assistantController.updateAssistant)
 
 export default router

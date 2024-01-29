@@ -11,6 +11,7 @@ import assistantRoutes from "./routes/assistant.route.js"
 import organizationRoutes from "./routes/organization.route.js"
 import teamRoutes from "./routes/team.route.js"
 import threadRoutes from "./routes/thread.route.js"
+import promptRoutes from "./routes/prompt.route.js"
 import messageRoutes from "./routes/message.route.js"
 
 export const openai = new OpenAI({
@@ -41,6 +42,10 @@ class Server {
         this.app.use(cors());
         this.app.use(morgan('dev'))
         this.app.use(express.json());
+        this.app.use((req, res, next) => {
+            console.log("Request received at: ", Date.now());
+            next();
+        })
     }
 
     addRoutes() {
@@ -51,6 +56,7 @@ class Server {
         this.app.use(this.versionThisRoute("/team"), teamRoutes);
         this.app.use(this.versionThisRoute("/thread"), threadRoutes);
         this.app.use(this.versionThisRoute("/message"), messageRoutes);
+        this.app.use(this.versionThisRoute("/prompt"), promptRoutes);
     }
 
     async connectToDb() {

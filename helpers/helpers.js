@@ -62,6 +62,7 @@ class Helper {
   }
 
   sendServerErrorResponse(responseObject, statusCode, error, message) {
+    console.log({ SSError: error })
     responseObject.status(statusCode).json({ error, message })
   }
 

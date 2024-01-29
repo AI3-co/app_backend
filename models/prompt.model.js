@@ -5,9 +5,15 @@ const PromptSchema = new Schema({
         type: String,
         required: true
     },
+    createdBy: {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+        required: true
+    },
     folder: {
         type: [Schema.Types.ObjectId],
-        ref: "PromptFolder"
+        ref: "PromptFolder",
+        required: true
     }
 }, { timestamps: true })
 

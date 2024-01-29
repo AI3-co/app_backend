@@ -16,6 +16,20 @@ const UserSchema = new Schema({
         type: Boolean,
         default: false,
     },
+    microsoftEmail: {
+        unique: true,
+        type: String,
+    },
+    microsoftPassword: {
+        type: String,
+    },
+    googleEmail: {
+        unique: true,
+        type: String,
+    },
+    googlePassword: {
+        type: String,
+    },
     role: {
         type: String,
         default: 'user'
@@ -32,8 +46,8 @@ const UserSchema = new Schema({
     },
     password: {
         type: String,
-        required: true,
         trim: true,
+        required: true,
     },
     teams: {
         type: [Schema.Types.ObjectId],

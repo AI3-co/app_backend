@@ -107,7 +107,7 @@ class TeamController {
 
             const foundTeam = await getSingleResourceAndPopulateFields(Team, { id: teamID }, [...populateArray])
 
-            console.log({ foundTeam })
+            console.log({ newFoundTeam: foundTeam })
 
             console.log({ currentType, populateObj: populateArray })
 
