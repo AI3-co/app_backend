@@ -7,10 +7,56 @@ import { DefaultFolderTemplates } from "../utils/template.js"
 import { buildAssistant } from "../services/openAI.service.js"
 import Helper from "../helpers/helpers.js"
 import { useFetchOrganizationTeams, useJoinOrganization } from "../services/entities/organization.js"
+// import { send } from "express/lib/response.js"
+import { saveTeamInvitationToDatabase } from "./invitation.js"
+import { getInvitationDetailsFromDatabase } from "../repos/db.js"
+import { associateUserWithTeam } from "../repos/db.js"
 
 const helper = new Helper()
 
 class OrganizationController {
+    
+    async acceptTeamInvitation(req, res) {
+        try {
+            const organizationID = req.params.id;
+            const invitationToken = await saveInvitationToDatabase(organizationID, invitedUserID, accessLevel);
+
+            // Perform validation and checks as needed
+            if (!organizationID || !invitationToken) {
+                throw new Error('Invalid request parameters.');
+            }
+
+            // Retrieve the invitation details from the database
+            const invitationDetails = await getInvitationDetailsFromDatabase(organizationID, invitationToken);
+
+            // Associate the user with the team
+            await associateUserWithTeam(invitationDetails.organizationID, invitationDetails.invitedUserID, invitationDetails.accessLevel);
+
+            // Respond with success or error message
+            res.status(200).json({ message: 'Team invitation accepted successfully.' });
+        } catch (error) {
+            // Respond with error message
+            res.status(400).json({ error: error.message, message: 'Error accepting team invitation.' });
+        }
+    }
+
+
+    async updateMemberPermissions(req, res) {
+        try {
+            const organizationID = req.params.organizationId;
+            const userID = req.params.userId;
+            const newAccessLevel = req.body.accessLevel; // You may customize this based on your access control system
+
+            // Perform validation and checks as needed
+
+            // Logic to update member permissions
+            // Validate that the requesting user has the necessary permissions
+            // Update the access level or role of the specified team member
+            // Respond with success or error message
+        } catch (error) {
+            // Respond with error message
+        }
+    }
     /* JOIN AN ORGANIZATION */
     /*
     */
@@ -198,4 +244,7 @@ class OrganizationController {
     }
 }
 
-export default OrganizationController
+
+
+
+export default OrganizationController;

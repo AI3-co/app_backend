@@ -4,6 +4,12 @@ import Team from '../models/team.model.js'
 import Organization from "../models/organization.model.js"
 import { getAllResources, getResourceById, getSingleResourceAndPopulateFields } from '../repos/db.js'
 import { populate } from 'dotenv';
+import { ObjectId } from 'mongoose';
+import { getInvitationDetailsFromDatabase } from '../repos/db.js';
+import { associateUserWithTeam } from '../repos/db.js';
+import TeamInvite from '../models/teamInvite.model.js';
+import { v4 as uuidv4 } from 'uuid';
+import { signToken } from '../middlewares/jwt.js';
 
 const helper = new Helper()
 
@@ -120,6 +126,113 @@ class TeamController {
             helper.sendServerErrorResponse(res, 401, error, 'Error fetching all teams')
         }
     }
+
+    async sendTeamInvitation(req, res) {
+        const { organizationID, email, accessLevel } = req.body;
+      
+        const jwtPayload = {
+            organizationID,
+            email,
+            accessLevel,
+        }; 
+
+        const invitationToken = signToken(jwtPayload);
+      
+        const teamInvite = new TeamInvite({
+          organizationID,
+          email,
+          accessLevel,
+          token: invitationToken,
+          expirationDate: Date.now() + 24*60*60*1000, // 24 hours from now
+        });
+      
+        await teamInvite.save();
+      
+        // Send the invitationToken to the user by email or other means
+      
+        res.json({
+          message: 'Team invitation sent successfully.',
+            invitationToken,
+        });
+      } catch (error) {
+        res.status(400).json({ error: error.message, message: 'Error sending team invitation.' });
+        }
+    
+
+    async acceptTeamInvitation(req, res) {
+        try {
+            const invitationToken = req.body.invitationToken;
+        
+            // Perform validation and checks as needed
+            if (!invitationToken) {
+                throw new Error('Invalid request parameters.');
+            }
+            // Logic to accept team invitations
+            const invitationDetails = await getInvitationDetailsFromDatabase(invitationToken);
+            await associateUserWithTeam(invitationDetails.organizationID, invitationDetails.email, invitationDetails.invitedUserID, invitationDetails.accessLevel);
+        
+            // Respond with success or error message
+            res.status(200).json({ message: 'Team invitation accepted successfully.' });
+        } catch (error) {
+            // Respond with error message
+            res.status(400).json({ error: error.message, message: 'Error accepting team invitation.' });
+        }
+    }
+
+    async updateMemberPermissions(req, res) {
+        try {
+            const organizationID = req.params.organizationId;
+            const userID = req.params.userId;
+            const newAccessLevel = req.body.accessLevel;
+
+            // Perform validation and checks as needed
+            if (!organizationID || !userID || !newAccessLevel) {
+                throw new Error('Invalid request parameters.');
+            }
+
+            // Logic to update member permissions
+            await updateMemberAccessLevel(organizationID, userID, newAccessLevel);
+
+            // Respond with success or error message
+            res.status(200).json({ message: 'Member permissions updated successfully.' });
+        } catch (error) {
+            // Respond with error message
+            res.status(400).json({ error: error.message, message: 'Error updating member permissions.' });
+        }
+    }
+
 }
 
-export default TeamController
+// Function to save invitation to the database
+export async function saveInvitationToDatabase(organizationID, invitedUserID) {
+    try {
+        // Validate that organizationID is a valid ObjectId
+        if (!ObjectId.isValid(organizationID)) {
+            throw new Error('Invalid organization ID.');
+        }
+
+        // Logic to save the invitation to the database
+        const organization = await Organization.findById(organizationID);
+
+        if (!organization) {
+            return { error: 'Invalid organization ID.', success: false };
+        }
+
+        // Assuming 'teamInvitations' is an array in your Organization model
+        organization.teamInvitations.push(
+            invitedUserID,
+            // Add other necessary details
+        );
+
+        await organization.save();
+
+        // Return the invitation token or any other relevant data
+        return { invitationToken: 'your_invitation_token', success: true };
+    } catch (error) {
+        return { error: `Error saving team invitation to database: ${error.message}`, success: false };
+    }
+}
+
+
+export default TeamController;
+

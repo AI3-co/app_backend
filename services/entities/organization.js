@@ -15,6 +15,7 @@ export async function useJoinOrganization(organizationID, userID) {
     }
 }
 
+
 export async function useFetchOrganizationTeams(organizationID) {
     try {
         if (!organizationID) throw Error('Organization needed')
@@ -28,7 +29,7 @@ export async function useFetchOrganizationTeams(organizationID) {
         return foundOrg
     } catch (error) {
         throw Error('Error adding user to Organization: ' + error.message)
-    }
+    }  
 }
 
 

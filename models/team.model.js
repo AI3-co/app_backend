@@ -44,7 +44,11 @@ const TeamSchema = new Schema({
     lastVisitedThread: {
         type: Schema.Types.ObjectId,
         ref: "Thread"
-    }
+    },
+    teamInvitations: {
+        type: [Schema.Types.ObjectId],
+        ref: "User"
+    },
 }, { timestamps: true })
 
 TeamSchema.set('toJSON', helper.formatModelResponse())
