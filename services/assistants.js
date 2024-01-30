@@ -1,7 +1,7 @@
 import { createResource, getAllResources, pushUpdatesToResource, updateResource } from "../repos/db.js"
 import Assistant from "../models/assistant.model.js"
 import { buildAssistant } from "./openAI.service.js";
-import Team from "../models/team.model.js"
+import Team from "../models/team.model.js";
 
 class AssistantService {
 
