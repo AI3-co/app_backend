@@ -1,7 +1,6 @@
 import Organization from "../../models/organization.model.js"
 import TeamInvite from "../../models/teamInvite.model.js"
-import { ObjectId } from 'mongodb'
-
+import Team from "../..//models/team.model.js"
 
 // Function to save team invitation to the database
 export async function saveTeamInvitationToDatabase(organizationID, email, invitedUserID, accessLevel) {
@@ -37,4 +36,20 @@ export async function saveTeamInvitationToDatabase(organizationID, email, invite
         console.error(`Error saving team invitation to database: ${error.message}`);
         throw error;
     }
+}
+
+export default class TeamService {
+    async getTeamAssistants(teamID) {
+        try {
+            const teamAssistants = await Team.findById(teamID).populate('assistants')
+            console.log({teamAssistants})
+            return teamAssistants
+        } catch (error) {
+            console.error(`Error saving team invitation to database: ${error.message}`);
+        }
+    }
+
+    async getTeamMembers() {}
+
+    async searchTeamMembers(teamID) {}
 }

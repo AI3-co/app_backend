@@ -180,7 +180,9 @@ class OrganizationController {
         try {
             const organizationID = req.params.id
             if (!organizationID) throw Error('Organization is required')
-            const orgTeams = (await useFetchOrganizationTeams(organizationID)).map(organization => organization)
+            // const orgTeams = (await useFetchOrganizationTeams(organizationID)).map(organization => organization)
+            const orgTeams = await useFetchOrganizationTeams(organizationID)
+            console.log({ orgTeams })
 
             helper.sendServerSuccessResponse(res, 200, orgTeams, 'Fetched teams within organization')
         } catch (error) {

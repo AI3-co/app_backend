@@ -1,6 +1,7 @@
 import { createResource, getAllResources, pushUpdatesToResource, updateResource } from "../repos/db.js"
 import Assistant from "../models/assistant.model.js"
 import { buildAssistant } from "./openAI.service.js";
+import Organization from "../models/organization.model.js";
 import Team from "../models/team.model.js";
 
 class AssistantService {
@@ -22,14 +23,23 @@ class AssistantService {
         }
     }
 
+    async getTeamAssistants(teamID) {
+        try {
+            const teams = await Team.findById(teamID).populate('assistants')
+            console.log({ teams })
+            const teamAssistants = teams.assistants
+            return teamAssistants
+        } catch (error) {
+            throw Error('Error while getting team assistants ' + error.message)
+        }
+    }
+
     async editAssistant(id, data) {
         let updatedAssistant;
         try {
             const foundAssistant = await updateResource(Assistant, { id }, data)
             console.log({ "edit_assistant": foundAssistant, data })
-
             if (foundAssistant.error) throw Error('Could not update resource')
-
             updatedAssistant = foundAssistant.resource
         } catch (error) {
             updatedAssistant = error
@@ -40,25 +50,22 @@ class AssistantService {
 
     async newAssistant(teamID, payload) {
         let result;
-
         try {
             const builtAssistant = await buildAssistant(payload)
             console.log({ builtAssistant })
-
             if (builtAssistant.success) {
                 const nativeConfig = { ...payload, openaiID: builtAssistant?.createdAssistant?.id }
                 const newAssistant = await createResource(Assistant, nativeConfig)
                 console.log({ newAssistant })
                 if (newAssistant.success) {
                     result = newAssistant.resource
-                    console.log({ result })
+                    console.log({ newAssresult: result })
                     const assignAssitant = await this.assignAssistantToTeam(teamID, result?.id)
                     console.log({ assignAssitant })
                     return result
                 } else {
                     throw Error('Could not create assistant on DB' + newAssistant?.error)
                 }
-
             }
         } catch (error) {
             console.log({ error: Object.keys(error) })
@@ -68,10 +75,11 @@ class AssistantService {
 
     async assignAssistantToTeam(teamID, assistantID) {
         let foundTeam;
-
         try {
-            foundTeam = await pushUpdatesToResource(Team, { id: teamID }, { fieldToUpdate: 'assistants', newData: [assistantID] })
-            console.log({ foundTeam })
+            // foundTeam = await pushUpdatesToResource(Team, { id: teamID }, { fieldToUpdate: 'assistants', newData: [assistantID] })
+            foundTeam = await Team.findByIdAndUpdate(teamID, { $push: { assistants: assistantID } }, { new: true })
+            const foundOrganization = await Organization.findByIdAndUpdate(foundTeam.organization, { $push: { assistants: assistantID } }, { new: true })
+            console.log('ASSIGN ASSiST to Team', { foundTeam, teamID, assistantID, foundOrganization })
             return foundTeam
         } catch (error) {
             throw Error('Error assigning assistant to team ' + error.message)

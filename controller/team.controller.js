@@ -73,8 +73,6 @@ class TeamController {
 
             console.log({ resourceType, resourceID })
 
-            // I want to write code that would extract the resource type and resource ID from the URL
-
             if (!teamID) throw Error('Team is required')
 
             if (!resourceType) throw Error('Resource type is required')
