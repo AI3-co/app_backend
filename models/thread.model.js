@@ -1,18 +1,41 @@
 import { Schema, model } from 'mongoose'
-import Helper from '../helpers/helpers'
+import Helper from '../helpers/helpers.js'
 
 const helper = new Helper()
 
 const ThreadSchema = new Schema({
+    createdBy: {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+        required: true
+    },
+    title: {
+        type: String,
+        default: 'Untitled', // use ai to automate title generation
+    },
     messages: {
         type: [Schema.Types.ObjectId],
-        ref: 'Message'
+        ref: "Message",
+        required: true
     },
-    threadId: {
+    tags: {
+        type: [],
+    },
+    oaiThreadID: {
         type: String,
+        required: true
+    },
+    runID: {
+        type: String,
+    },
+    team: {
+        type: Schema.Types.ObjectId,
+        ref: "Team",
         required: true
     }
 }, { timestamps: true })
+
+// ThreadSchema.virtual()
 
 ThreadSchema.set('toJSON', helper.formatModelResponse())
 

@@ -1,6 +1,9 @@
-import { createResource, getResourceById } from "../repos/db.js";
+import { createResource, getResourceById, getAllResources, getAllResourceAndPopulateRefFields } from "../repos/db.js";
 import BaseController from "./base.controller.js";
 import User from "../models/user.model.js"
+import Helper from "../helpers/helpers.js";
+
+const helper = new Helper()
 
 class UserController extends BaseController {
     constructor(model) {
@@ -10,25 +13,35 @@ class UserController extends BaseController {
     async createUser(req, res, next) {
         const user = { ...req.body }
         const newUser = await createResource(User, user)
-        console.log('New User: ', newUser)
 
         if (newUser.success) {
-            console.log("User created")
-            res.status(201).json({ data: newUser.resource })
+            res.status(201).json({ message: "User created successfully", data: newUser.resource })
         } else {
             console.log("User not created")
-            res.status(401).json({ data: newUser })
+            res.status(401).json({ data: newUser.error })
         }
     }
 
     async getAllUsers(req, res, next) {
         // get all users
+        try {
+            const allUsers = await getAllResourceAndPopulateRefFields(User, ['teams', 'organizations'])
+            // console.log({ allUsers })
+            res.status(200).json({ data: allUsers, message: "All users fetched" })
+        } catch (error) {
+            res.status(401).json({ error: 'Error Fetching all users', message: error.message })
+        }
     }
 
-    async getSingleUser(req, res, next) {
-        // fetch a single user
-        // const data = await getResources(req, res, next, { model: User, message: "User found" })
-        console.log('Data', data)
+    async getSingleUser(req, res) {
+        try {
+            const user = await getResourceById(User, {id: req.params.id})
+            console.log({ singleUser: user, id: req.params.id })
+            if (!user.resource) throw new Error("User not found")
+            helper.sendSuccessResponse(res, 200, user, "User found")
+        } catch (error) {
+            helper.sendServerErrorResponse(res, 404, error.message)
+        }
     }
 
     async updateSingleUser(req, res, next) {

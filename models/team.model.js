@@ -4,9 +4,21 @@ import Helper from '../helpers/helpers.js'
 const helper = new Helper()
 
 const TeamSchema = new Schema({
+    createdBy: {
+        type: Schema.Types.ObjectId,
+        ref: "User"
+    },
     name: {
         type: String,
         require: true
+    },
+    files: {
+        type: [Schema.Types.ObjectId],
+        ref: "File"
+    },
+    promptFolder: {
+        type: [Schema.Types.ObjectId],
+        ref: "PromptFolder"
     },
     organization: {
         type: Schema.Types.ObjectId,
@@ -15,12 +27,28 @@ const TeamSchema = new Schema({
     },
     members: {
         type: [Schema.Types.ObjectId],
-        ref: 'Members'
+        ref: "User"
+    },
+    threads: {
+        type: [Schema.Types.ObjectId],
+        ref: 'Thread'
     },
     assistants: {
         type: [Schema.Types.ObjectId],
-        ref: 'Assistants'
-    }
+        ref: 'Assistant'
+    },
+    defaultAssistant: {
+        type: Schema.Types.ObjectId,
+        ref: "Assistant"
+    },
+    lastVisitedThread: {
+        type: Schema.Types.ObjectId,
+        ref: "Thread"
+    },
+    teamInvitations: {
+        type: [Schema.Types.ObjectId],
+        ref: "User"
+    },
 }, { timestamps: true })
 
 TeamSchema.set('toJSON', helper.formatModelResponse())
