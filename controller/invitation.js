@@ -38,31 +38,3 @@ export async function saveTeamInvitationToDatabase(organizationID, invitedUserID
         throw error;
     }
 }
-
-        
-
-
-
-        
-
-        // create team invite - resource method - access the properities 
-        // creates record - returns the id of the record
-        // pull the id of invite
-        // put the id in and push
-
-        // Add the invitation to the organization's teamInvitations array
-       // organization.teamInvitations.push({
-        //    invitedUserID,
-          //  accessLevel,
-       /*     token: generateUniqueToken(), // You can use any token generation library of your choice */
-       // Add the ID of the Token "Normalization" - create records in the database
-          //  status: 'pending',
-        // });
-
-        // Don't forget to save the organization after modifying it
-       /* await organization.save();
-
-        } catch (error) {
-        console.error(`Error saving team invitation to database: ${error.message}`);
-        } 
-} */
