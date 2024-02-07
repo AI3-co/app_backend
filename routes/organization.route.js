@@ -16,6 +16,5 @@ router
     .post("/:id/invite/accept", verifyUserAction, organizationController.acceptTeamInvitation)
     .put("/:organizationId/members/:userId", verifyUserAction, organizationController.updateMemberPermissions)
     .post("/:id/invite", saveTeamInvitationToDatabase) // Use the same function for sending team invitations
-// .get("")
 
 export default router

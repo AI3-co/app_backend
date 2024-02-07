@@ -1,8 +1,7 @@
 import { EmailClient, KnownEmailSendStatus } from "@azure/communication-email";
 import fs from 'fs'
 
-const connectionString = "endpoint=https://ai3-communication-services.unitedstates.communication.azure.com/;accesskey=q/xPVE1IUfzRVDh1+2GfXAHkAxT2Mjipr5QM1sPf8R7P7JDm6hxjzcSif/JZEnFFeJAjNTdsXObnQ1YocKaPrg=="
-// const connectionString = process.env["ACS_COMMUNICATION_STRING"]
+const connectionString = process.env["ACS_COMMUNICATION_STRING"]
 const senderAddress = "donotreply@ai3.co"
 const recipientAddress = "joeycharlesworth@gmail.com"
 

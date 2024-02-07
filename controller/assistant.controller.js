@@ -2,10 +2,12 @@ import Helper from '../helpers/helpers.js';
 import Assistant from '../models/assistant.model.js'
 import { createResource, getSingleResourceAndPopulateFields } from '../repos/db.js';
 import AssistantService from '../services/assistants.js';
+import TeamService from '../services/entities/team.service.js';
 import { buildAssistant } from '../services/openAI.service.js';
 
 const helper = new Helper()
 const assistantService = new AssistantService()
+const teamService = new TeamService()
 
 class AssistantController {
 
@@ -16,6 +18,17 @@ class AssistantController {
 
         helper.sendServerSuccessResponse(res, 200, assistants, 'Found all assistants')
     }
+
+    async getTeamAssistants(req, res) {
+        console.log({reqParams: req.params})
+        try {
+            const teamID = req.params.id
+            const assistants = await assistantService.getTeamAssistants(teamID)
+            helper.sendServerSuccessResponse(res, 200, {assistants}, 'Found all assistants')
+        } catch (error) {
+            helper.sendServerErrorResponse(res, 400, error, 'Error getting team assistants')
+        }
+    }   
 
     async createAssistant(req, res, next) {
         const { body } = req
@@ -48,7 +61,10 @@ class AssistantController {
             console.log({ tID: teamID, data })
             const newAssistant = await assistantService.newAssistant(teamID, data)
             console.log({ newASS: newAssistant })
-            helper.sendServerSuccessResponse(res, 201, newAssistant, 'Assistant created and assigned')
+            // send back a list of the current assistants under the team
+            const teamAssistants = (await teamService.getTeamAssistants(teamID)).assistants
+            console.log({teamAssistants})
+            helper.sendServerSuccessResponse(res, 201, {newAssistant, teamAssistants}, 'Assistant created and assigned')
         } catch (error) {
             helper.sendServerErrorResponse(res, 400, error, error.error)
         }
@@ -73,6 +89,8 @@ class AssistantController {
 
         console.log({ id, formData })
         const editedAssistant = await assistantService.editAssistant(id, formData)
+        
+        console.log({ editedAssistant })
 
         helper.sendServerSuccessResponse(res, 200, editedAssistant, 'Assistant updated')
     }

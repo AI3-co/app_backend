@@ -20,13 +20,11 @@ export async function useFetchOrganizationTeams(organizationID) {
     try {
         if (!organizationID) throw Error('Organization needed')
         // const foundOrg = await updateResource(Organization, { id: organizationID })
-        const foundOrg = await Team.
-            find({ organization: organizationID })
-            .populate('organization')
-            .populate('assistants')
-            .populate('members')
-        console.log({ foundOrg })
-        return foundOrg
+        const organization = await Organization
+                                    .findById(organizationID)
+                                    .populate('teams')
+                                    .populate('members')
+        return organization
     } catch (error) {
         throw Error('Error adding user to Organization: ' + error.message)
     }  
