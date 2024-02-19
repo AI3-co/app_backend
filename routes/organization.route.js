@@ -12,6 +12,7 @@ router
     .get("/", verifyUserAction, organizationController.getAllOrganizations)
     .get("/:id/teams", verifyUserAction, organizationController.getOrganizationTeams)
     .post("/", verifyUserAction, organizationController.createOrganization)
+    .patch("/:id", verifyUserAction, organizationController.updateSingleOrganization)
     .get("/:id", verifyUserAction, organizationController.getSingleOrganization)
     .post("/:id/invite/accept", verifyUserAction, organizationController.acceptTeamInvitation)
     .put("/:organizationId/members/:userId", verifyUserAction, organizationController.updateMemberPermissions)

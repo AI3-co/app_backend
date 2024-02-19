@@ -35,6 +35,7 @@ class Server {
     }
 
     versionThisRoute(route) {
+        console.log({ route, versioning: this.versioning, path: this.versioning + route })
         return this.versioning + route
     }
 
@@ -57,6 +58,9 @@ class Server {
         this.app.use(this.versionThisRoute("/thread"), threadRoutes);
         this.app.use(this.versionThisRoute("/message"), messageRoutes);
         this.app.use(this.versionThisRoute("/prompt"), promptRoutes);
+        // this.app.use(this.versionThisRoute("/"), (req, res) => {
+        //     res.send('HELLO from AI3')
+        // })
     }
 
     async connectToDb() {

@@ -2,9 +2,10 @@ import { createResource, getResourceById, getAllResources, getAllResourceAndPopu
 import BaseController from "./base.controller.js";
 import User from "../models/user.model.js"
 import Helper from "../helpers/helpers.js";
+import UserService from "../services/user.service.js";
 
 const helper = new Helper()
-
+const userService = new UserService()
 class UserController extends BaseController {
     constructor(model) {
         super(model)
@@ -35,7 +36,7 @@ class UserController extends BaseController {
 
     async getSingleUser(req, res) {
         try {
-            const user = await getResourceById(User, {id: req.params.id})
+            const user = await getResourceById(User, { id: req.params.id })
             console.log({ singleUser: user, id: req.params.id })
             if (!user.resource) throw new Error("User not found")
             helper.sendSuccessResponse(res, 200, user, "User found")
@@ -44,8 +45,16 @@ class UserController extends BaseController {
         }
     }
 
-    async updateSingleUser(req, res, next) {
+    async updateSingleUser(req, res) {
         // update a single user
+        try {
+            console.log({ req: req.user })
+            const editedUser = await userService.editUserInfo(req.user.userId, req.body)
+            console.log({ editedUser })
+            helper.sendServerSuccessResponse(res, 200, editedUser, 'User updated')
+        } catch (error) {
+            helper.sendServerErrorResponse(res, 404, error.message)
+        }
     }
 
     async deleteSinglesUser(req, res, next) {
