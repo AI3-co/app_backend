@@ -11,11 +11,12 @@ import { useFetchOrganizationTeams, useJoinOrganization } from "../services/enti
 import { saveTeamInvitationToDatabase } from "./invitation.js"
 import { getInvitationDetailsFromDatabase } from "../repos/db.js"
 import { associateUserWithTeam } from "../repos/db.js"
+import OrganizationService from "../services/organization.service.js"
 
 const helper = new Helper()
-
+const organizationService = new OrganizationService()
 class OrganizationController {
-    
+
     async acceptTeamInvitation(req, res) {
         try {
             const organizationID = req.params.id;
@@ -225,6 +226,16 @@ class OrganizationController {
     /* EDIT AN ORGANIZATION */
     /*
     */
+    async updateSingleOrganization(req, res) {
+        try {
+            const organizationID = req.params.id
+            const { newInfo } = req.body
+            const updatedOrganization = await organizationService.editOrganizationInfo(organizationID, { ...newInfo })
+            helper.sendServerSuccessResponse(res, 200, updatedOrganization, 'Organization updated')
+        } catch (error) {
+            helper.sendServerErrorResponse(res, 401, error, 'Error updating an organization')
+        }
+    }
 
 
     /* GET ALL ORGANIZATIONS */
